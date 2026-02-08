@@ -3,13 +3,19 @@ class Editor {
 	Buffer buffer;
 	Render render;
 
+	FileExplorer fileExplorer;
 
 	public Editor() {
 		buffer = new Buffer();
 		render = new Render(buffer);
+		fileExplorer = new FileExplorer();
 	}
 	public void startEditor() {
 		Console.Clear();
+
+		buffer.lines = fileExplorer.readFile(@"C:\Users\leona\source\repos\ide-maybe\test.txt");
+		render.RedrawSection(0);
+
 		while (true) {
 			ConsoleKeyInfo keyInfo = Console.ReadKey(intercept: true);
 
