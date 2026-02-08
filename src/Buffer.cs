@@ -52,11 +52,11 @@ class Buffer {
 				return;
 			}
 			line++;
-			prefColoum = 0;
-			coloumn = prefColoum;
+			coloumn = 0;
+			prefColoum = coloumn;
 		} else {
-			prefColoum++;
-			coloumn = prefColoum;
+			coloumn++;
+			prefColoum = coloumn;
 		}
 	}
 
@@ -66,17 +66,17 @@ class Buffer {
 				return;
 			}
 			line--;
-			prefColoum = lines[line].Count;
-			coloumn = prefColoum;
+			coloumn = lines[line].Count;
+			prefColoum = coloumn;
 		} else {
-			prefColoum--;
-			coloumn = prefColoum;
+			coloumn--;
+			prefColoum = coloumn;
 		}
 	}
 
 	public bool backspace() {
 		if (coloumn > 0) {
-			lines[line].RemoveAt(coloumn - 1);
+			lines[line].RemoveAt(Math.Max(coloumn - 1, 0));
 			prefColoum--;
 			coloumn = prefColoum;
 			return false;
@@ -104,6 +104,13 @@ class Buffer {
 	}
 
 	public void insertChar(char c) {
+		if (coloumn < 0) {
+			coloumn = 0;
+		}
+		if (coloumn > lines[line].Count) {
+			coloumn = lines[line].Count;
+		}
+		prefColoum = coloumn;
 		lines[line].Insert(coloumn, c);
 		prefColoum++;
 		coloumn = prefColoum;

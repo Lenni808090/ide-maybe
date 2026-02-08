@@ -9,6 +9,7 @@ class Editor {
 		render = new Render(buffer);
 	}
 	public void startEditor() {
+		Console.Clear();
 		while (true) {
 			ConsoleKeyInfo keyInfo = Console.ReadKey(intercept: true);
 
@@ -23,13 +24,15 @@ class Editor {
 
 			if (keyInfo.Key == ConsoleKey.Enter) {
 				buffer.newLine();
-				render.RedrawSection();
+				render.RedrawSection(Math.Max(buffer.line - 1, 0));
+				render.setCursor();
 			} else if (keyInfo.Key == ConsoleKey.Backspace) {
 				bool fullRedraw = buffer.backspace();
 				if (fullRedraw) {
-					render.RedrawSection();
+					render.RedrawSection(Math.Max(buffer.line - 1, 0));
+					render.setCursor();
 				} else {
-					render.RedrawLine();
+					render.RedrawLine(buffer.line);
 				}
 			} else if (keyInfo.Key == ConsoleKey.LeftArrow) {
 				buffer.moveLeft();
@@ -45,7 +48,8 @@ class Editor {
 				render.setCursor();
 			} else if (!char.IsControl(keyInfo.KeyChar)) {
 				buffer.insertChar(keyInfo.KeyChar);
-				render.RedrawLine();
+				render.RedrawLine(buffer.line);
+				render.setCursor();
 			}
 		}
 	}

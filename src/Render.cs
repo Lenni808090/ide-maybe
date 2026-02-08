@@ -9,11 +9,12 @@ class Render {
 		screenCharCount = new List<int>();
 	}
 
-	public void RedrawLine() {
-		List<char> lineToRedraw = buffer.lines[buffer.line];
-		int start = 0;
+	public void RedrawLine(int indLineToRedraw) {
+		Console.CursorVisible = false;
+		List<char> lineToRedraw = buffer.lines[indLineToRedraw];
+		int start = Math.Max(buffer.coloumn - 1, 0);
 
-		Console.SetCursorPosition(start, buffer.line);
+		Console.SetCursorPosition(start, indLineToRedraw);
 
 		for (int i = start; i < lineToRedraw.Count; i++) {
 			Console.Write(lineToRedraw[i]);
@@ -22,28 +23,27 @@ class Render {
 		int lineCount = lineToRedraw.Count;
 
 		int screenCount = 0;
-		if (screenCharCount.Count > buffer.line) {
-			screenCount = screenCharCount[buffer.line];
+		if (screenCharCount.Count > indLineToRedraw) {
+			screenCount = screenCharCount[indLineToRedraw];
 		}
 
 		int remainingChars = (screenCount > lineCount) ? (screenCount - lineCount) : 0;
 
-		for (int i = 0; i < remainingChars; i++) {
-			Console.Write(" ");
-		}
+		Console.Write(new string(' ', remainingChars));
 
-		if (screenCharCount.Count <= buffer.line) {
+		if (screenCharCount.Count <= indLineToRedraw) {
 			screenCharCount.Add(lineCount);
 		} else {
-			screenCharCount[buffer.line] = lineCount;
+			screenCharCount[indLineToRedraw] = lineCount;
 		}
+		Console.SetCursorPosition(buffer.coloumn, indLineToRedraw);
 
-		Console.SetCursorPosition(buffer.coloumn, buffer.line);
+		Console.CursorVisible = true;
 	}
 
-	public void RedrawSection() {
-		for (int i = Math.Max(buffer.line - 1, 0); i < buffer.lines.Count; i++) {
-			RedrawLine();
+	public void RedrawSection(int startLine) {
+		for (int i = startLine; i < buffer.lines.Count; i++) {
+			RedrawLine(i);
 		}
 
 		if (screenCharCount.Count > buffer.lines.Count) {
