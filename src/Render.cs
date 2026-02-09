@@ -27,7 +27,7 @@ class Render {
 		Console.CursorVisible = false;
 		List<char> lineToRedraw = buffer.lines[indLineToRedraw];
 		int start = 0;
-		int screenLine = Math.Max(buffer.line - topLine, 0);
+		int screenLine = Math.Max(indLineToRedraw - topLine, 0);
 		Console.SetCursorPosition(start, screenLine);
 
 		Console.ForegroundColor = ConsoleColor.DarkRed;
@@ -65,7 +65,8 @@ class Render {
 
 		if (screenCharCount.Count > bottomLine) {
 			for (int i = bottomLine + 1; i < screenCharCount.Count; i++) {
-				Console.SetCursorPosition(0, i);
+				int screenLine = Math.Max(i - topLine, 0);
+				Console.SetCursorPosition(0, screenLine);
 				clearLine();
 			}
 
