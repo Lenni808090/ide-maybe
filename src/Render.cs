@@ -4,14 +4,21 @@ class Render {
 	List<int> screenCharCount;
 	Buffer buffer;
 
+	int topLine = 0;
+	int bottomLine = 0;
+
 	int curRenderLine = 0;
 	public Render(Buffer buffer) {
 		this.buffer = buffer;
 		screenCharCount = new List<int>();
 	}
 
-	public int getCursorPos() {
-		return buffer.coloumn + curRenderLine.ToString().Length + 1;
+	public int getCursorPos(int indLine) {
+		return buffer.coloumn + indLine.ToString().Length + 1;
+	}
+
+	public void RedrawScreen() {
+		topLine = buffer.line - Console.WindowHeight;
 	}
 
 	public void RedrawLine(int indLineToRedraw) {
@@ -43,7 +50,7 @@ class Render {
 		} else {
 			screenCharCount[indLineToRedraw] = lineCount;
 		}
-		Console.SetCursorPosition(getCursorPos(), indLineToRedraw);
+		Console.SetCursorPosition(getCursorPos(indLineToRedraw), indLineToRedraw);
 
 		Console.CursorVisible = true;
 	}
@@ -64,7 +71,13 @@ class Render {
 	}
 
 	public void setCursor() {
-		Console.SetCursorPosition(getCursorPos(), buffer.line);
+		int xPos;
+		if (buffer.line > Console.WindowHeight) {
+			xPos = buffer.line - topLine;
+		} else {
+			xPos = buffer.line;
+		}
+		Console.SetCursorPosition(getCursorPos(xPos), buffer.line);
 	}
 
 	public void clearLine() {
