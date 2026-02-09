@@ -7,6 +7,7 @@ class Render {
 	public int topLine = 0;
 	public int bottomLine = 0;
 
+
 	public Render(Buffer buffer) {
 		this.buffer = buffer;
 		screenCharCount = new List<int>();
@@ -26,7 +27,8 @@ class Render {
 		Console.CursorVisible = false;
 		List<char> lineToRedraw = buffer.lines[indLineToRedraw];
 		int start = 0;
-		Console.SetCursorPosition(start, indLineToRedraw);
+		int screenLine = Math.Max(buffer.line - topLine, 0);
+		Console.SetCursorPosition(start, screenLine);
 
 		Console.ForegroundColor = ConsoleColor.DarkRed;
 		Console.Write(indLineToRedraw + " ");
@@ -52,7 +54,6 @@ class Render {
 		} else {
 			screenCharCount[indLineToRedraw] = lineCount;
 		}
-		Console.SetCursorPosition(getCursorXPos(indLineToRedraw), indLineToRedraw);
 
 		Console.CursorVisible = true;
 	}
@@ -81,6 +82,7 @@ class Render {
 		}
 		Console.SetCursorPosition(getCursorXPos(indLine), buffer.line - topLine);
 	}
+
 
 	public void clearLine() {
 		Console.Write(new string(' ', Console.WindowWidth));

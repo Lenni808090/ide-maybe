@@ -36,7 +36,7 @@ class Editor {
 			} else if (keyInfo.Key == ConsoleKey.Backspace) {
 				bool fullRedraw = buffer.backspace();
 				if (fullRedraw) {
-					render.RedrawSection(Math.Max(buffer.line - 1, 0));
+					render.RedrawScreen();
 					render.setCursor();
 				} else {
 					render.RedrawLine(buffer.line);
