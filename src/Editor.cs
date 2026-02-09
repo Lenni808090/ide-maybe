@@ -14,7 +14,8 @@ class Editor {
 		Console.Clear();
 
 		buffer.lines = fileExplorer.readFile(@"C:\Users\leona\source\repos\ide-maybe\test.txt");
-		render.RedrawSection(0);
+		render.RedrawScreen();
+		render.setCursor();
 
 		while (true) {
 			ConsoleKeyInfo keyInfo = Console.ReadKey(intercept: true);
@@ -53,7 +54,7 @@ class Editor {
 				}
 				render.setCursor();
 			} else if (keyInfo.Key == ConsoleKey.DownArrow) {
-				buffer.moveUp();
+				buffer.moveDown();
 				if (buffer.line == render.bottomLine) {
 					render.RedrawScreen();
 				}

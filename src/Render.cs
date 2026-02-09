@@ -12,13 +12,13 @@ class Render {
 		screenCharCount = new List<int>();
 	}
 
-	public int getCursorPos(int indLine) {
+	public int getCursorXPos(int indLine) {
 		return buffer.coloumn + indLine.ToString().Length + 1;
 	}
 
 	public void RedrawScreen() {
-		topLine = Math.Max(buffer.line - Console.WindowHeight, 0);
-		bottomLine = Math.Min(topLine + Console.WindowHeight, buffer.lines.Count - 1);
+		topLine = Math.Max(buffer.line - (Console.WindowHeight - 1), 0);
+		bottomLine = Math.Min(topLine + (Console.WindowHeight - 1), buffer.lines.Count - 1);
 		RedrawSection(topLine);
 	}
 
@@ -28,7 +28,9 @@ class Render {
 		int start = 0;
 		Console.SetCursorPosition(start, indLineToRedraw);
 
+		Console.ForegroundColor = ConsoleColor.DarkRed;
 		Console.Write(indLineToRedraw + " ");
+		Console.ForegroundColor = ConsoleColor.White;
 
 		for (int i = start; i < lineToRedraw.Count; i++) {
 			Console.Write(lineToRedraw[i]);
@@ -50,18 +52,18 @@ class Render {
 		} else {
 			screenCharCount[indLineToRedraw] = lineCount;
 		}
-		Console.SetCursorPosition(getCursorPos(indLineToRedraw), indLineToRedraw);
+		Console.SetCursorPosition(getCursorXPos(indLineToRedraw), indLineToRedraw);
 
 		Console.CursorVisible = true;
 	}
 
 	public void RedrawSection(int startLine) {
-		for (int i = startLine; i < buffer.lines.Count; i++) {
+		for (int i = startLine; i <= bottomLine; i++) {
 			RedrawLine(i);
 		}
 
 		if (screenCharCount.Count > bottomLine) {
-			for (int i = bottomLine; i < screenCharCount.Count; i++) {
+			for (int i = bottomLine + 1; i < screenCharCount.Count; i++) {
 				Console.SetCursorPosition(0, i);
 				clearLine();
 			}
@@ -71,13 +73,13 @@ class Render {
 	}
 
 	public void setCursor() {
-		int xPos;
-		if (buffer.line > Console.WindowHeight) {
-			xPos = buffer.line - topLine;
+		int indLine;
+		if (buffer.line > (Console.WindowHeight - 1)) {
+			indLine = buffer.line - topLine;
 		} else {
-			xPos = buffer.line;
+			indLine = buffer.line;
 		}
-		Console.SetCursorPosition(getCursorPos(xPos), buffer.line);
+		Console.SetCursorPosition(getCursorXPos(indLine), buffer.line - topLine);
 	}
 
 	public void clearLine() {
