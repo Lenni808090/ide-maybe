@@ -13,6 +13,7 @@ class Buffer {
 		lines.Add(new List<char>());
 	}
 
+
 	public int getPrevWhiteSpaces() {
 		int whiteSpaceCount = 0;
 		List<char> lastLine = lines[line];
@@ -25,6 +26,25 @@ class Buffer {
 		}
 		return whiteSpaceCount;
 	}
+
+	public bool isItTab() {
+		int toDeleteSpaces = 0;
+
+		for (int i = coloumn - 1; i >= 0; i--) {
+			if (char.IsWhiteSpace(lines[line][i])) {
+				toDeleteSpaces++;
+				if (toDeleteSpaces == 4) {
+					return true;
+				}
+			} else {
+				return false;
+			}
+		}
+
+		return false;
+
+	}
+
 
 	public void newLine() {
 		List<char> newLine = lines[line].Slice(coloumn, lines[line].Count - coloumn);
@@ -91,9 +111,15 @@ class Buffer {
 
 	public bool backspace() {
 		if (coloumn > 0) {
-			lines[line].RemoveAt(Math.Max(coloumn - 1, 0));
-			prefColoum--;
-			coloumn = prefColoum;
+			if (isItTab()) {
+				lines[line].RemoveAt(Math.Max(coloumn - 4, 0));
+				prefColoum -= 4;
+				coloumn = prefColoum;
+			} else {
+				lines[line].RemoveAt(Math.Max(coloumn - 1, 0));
+				prefColoum--;
+				coloumn = prefColoum;
+			}
 			return false;
 		} else {
 			int lineBefore = line - 1;
@@ -118,7 +144,7 @@ class Buffer {
 		}
 	}
 
-	public void insertChar(char c) {
+	public void clampCursor() {
 		if (coloumn < 0) {
 			coloumn = 0;
 		}
@@ -126,8 +152,19 @@ class Buffer {
 			coloumn = lines[line].Count;
 		}
 		prefColoum = coloumn;
+	}
+
+	public void insertChar(char c) {
+		clampCursor();
 		lines[line].Insert(coloumn, c);
 		prefColoum++;
+		coloumn = prefColoum;
+	}
+
+	public void insertTab(int count) {
+		clampCursor();
+		lines[line].InsertRange(coloumn, new string(' ', count));
+		prefColoum += count;
 		coloumn = prefColoum;
 	}
 

@@ -56,6 +56,9 @@ class Editor {
 				buffer.insertChar(keyInfo.KeyChar);
 				render.RedrawLine(buffer.line);
 				render.setCursor();
+			} else if (keyInfo.Key == ConsoleKey.Tab) {
+				buffer.insertTab(4);
+				render.setCursor();
 			}
 		}
 	}
