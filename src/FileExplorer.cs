@@ -9,6 +9,9 @@ class FileExplorer {
 		foreach (string line in lines) {
 			readFile.Add([.. line]);
 		}
+		if (readFile.Count == 0) {
+			readFile.Add(new List<char>());
+		}
 		return readFile;
 	}
 }

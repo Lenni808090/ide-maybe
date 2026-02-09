@@ -4,17 +4,24 @@ class Render {
 	List<int> screenCharCount;
 	Buffer buffer;
 
+	int curRenderLine = 0;
 	public Render(Buffer buffer) {
 		this.buffer = buffer;
 		screenCharCount = new List<int>();
 	}
 
+	public int getCursorPos() {
+		return buffer.coloumn + curRenderLine.ToString().Length + 1;
+	}
+
 	public void RedrawLine(int indLineToRedraw) {
 		Console.CursorVisible = false;
 		List<char> lineToRedraw = buffer.lines[indLineToRedraw];
-		int start = Math.Max(buffer.coloumn - 1, 0);
-
+		int start = 0;
+		curRenderLine = indLineToRedraw;
 		Console.SetCursorPosition(start, indLineToRedraw);
+
+		Console.Write(indLineToRedraw + " ");
 
 		for (int i = start; i < lineToRedraw.Count; i++) {
 			Console.Write(lineToRedraw[i]);
@@ -36,7 +43,7 @@ class Render {
 		} else {
 			screenCharCount[indLineToRedraw] = lineCount;
 		}
-		Console.SetCursorPosition(buffer.coloumn, indLineToRedraw);
+		Console.SetCursorPosition(getCursorPos(), indLineToRedraw);
 
 		Console.CursorVisible = true;
 	}
@@ -57,7 +64,7 @@ class Render {
 	}
 
 	public void setCursor() {
-		Console.SetCursorPosition(buffer.coloumn, buffer.line);
+		Console.SetCursorPosition(getCursorPos(), buffer.line);
 	}
 
 	public void clearLine() {
