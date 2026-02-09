@@ -7,7 +7,6 @@ class Render {
 	int topLine = 0;
 	int bottomLine = 0;
 
-	int curRenderLine = 0;
 	public Render(Buffer buffer) {
 		this.buffer = buffer;
 		screenCharCount = new List<int>();
@@ -18,14 +17,15 @@ class Render {
 	}
 
 	public void RedrawScreen() {
-		topLine = buffer.line - Console.WindowHeight;
+		topLine = Math.Max(buffer.line - Console.WindowHeight, 0);
+		bottomLine = Math.Min(topLine + Console.WindowHeight, buffer.lines.Count - 1);
+		RedrawSection(topLine);
 	}
 
 	public void RedrawLine(int indLineToRedraw) {
 		Console.CursorVisible = false;
 		List<char> lineToRedraw = buffer.lines[indLineToRedraw];
 		int start = 0;
-		curRenderLine = indLineToRedraw;
 		Console.SetCursorPosition(start, indLineToRedraw);
 
 		Console.Write(indLineToRedraw + " ");
@@ -60,8 +60,8 @@ class Render {
 			RedrawLine(i);
 		}
 
-		if (screenCharCount.Count > buffer.lines.Count) {
-			for (int i = buffer.lines.Count; i < screenCharCount.Count; i++) {
+		if (screenCharCount.Count > bottomLine) {
+			for (int i = bottomLine; i < screenCharCount.Count; i++) {
 				Console.SetCursorPosition(0, i);
 				clearLine();
 			}
