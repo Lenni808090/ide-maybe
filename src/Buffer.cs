@@ -13,13 +13,28 @@ class Buffer {
 		lines.Add(new List<char>());
 	}
 
+	public int getPrevWhiteSpaces() {
+		int whiteSpaceCount = 0;
+		List<char> lastLine = lines[line];
+		foreach (char c in lastLine) {
+			if (char.IsWhiteSpace(c)) {
+				whiteSpaceCount++;
+			} else {
+				break;
+			}
+		}
+		return whiteSpaceCount;
+	}
+
 	public void newLine() {
 		List<char> newLine = lines[line].Slice(coloumn, lines[line].Count - coloumn);
 		lines[line].RemoveRange(coloumn, lines[line].Count - coloumn);
+		int leadingWhiteSpaces = getPrevWhiteSpaces();
 		line++;
-		coloumn = 0;
-		prefColoum = 0;
-		lines.Insert(line, newLine);
+		coloumn = leadingWhiteSpaces;
+		prefColoum = leadingWhiteSpaces;
+		lines.Insert(line, [.. new string(' ', leadingWhiteSpaces).ToCharArray()]);
+		lines[line].AddRange(newLine);
 	}
 
 	public void moveUp() {
