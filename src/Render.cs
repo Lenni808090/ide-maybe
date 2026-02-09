@@ -4,8 +4,8 @@ class Render {
 	List<int> screenCharCount;
 	Buffer buffer;
 
-	int topLine = 0;
-	int bottomLine = 0;
+	public int topLine = 0;
+	public int bottomLine = 0;
 
 	public Render(Buffer buffer) {
 		this.buffer = buffer;

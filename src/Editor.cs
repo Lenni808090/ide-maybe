@@ -30,7 +30,7 @@ class Editor {
 
 			if (keyInfo.Key == ConsoleKey.Enter) {
 				buffer.newLine();
-				render.RedrawSection(Math.Max(buffer.line - 1, 0));
+				render.RedrawScreen();
 				render.setCursor();
 			} else if (keyInfo.Key == ConsoleKey.Backspace) {
 				bool fullRedraw = buffer.backspace();
@@ -48,9 +48,15 @@ class Editor {
 				render.setCursor();
 			} else if (keyInfo.Key == ConsoleKey.UpArrow) {
 				buffer.moveUp();
+				if (buffer.line == render.topLine) {
+					render.RedrawScreen();
+				}
 				render.setCursor();
 			} else if (keyInfo.Key == ConsoleKey.DownArrow) {
-				buffer.moveDown();
+				buffer.moveUp();
+				if (buffer.line == render.bottomLine) {
+					render.RedrawScreen();
+				}
 				render.setCursor();
 			} else if (!char.IsControl(keyInfo.KeyChar)) {
 				buffer.insertChar(keyInfo.KeyChar);
