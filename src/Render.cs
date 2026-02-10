@@ -17,10 +17,52 @@ class Render {
 		return buffer.coloumn + indLine.ToString().Length + 1;
 	}
 
-	public void RedrawScreen() {
-		topLine = Math.Max(buffer.line - (Console.WindowHeight - 1), 0);
+	public void setTopLine() {
+		if (Console.WindowHeight - 1 > 20) {
+			topLine = Math.Max(buffer.line - 10, 0);
+		} else {
+			topLine = Math.Max(buffer.line - (Console.WindowHeight - 1) / 2, 0);
+		}
 		bottomLine = Math.Min(topLine + (Console.WindowHeight - 1), buffer.lines.Count - 1);
+	}
+
+	public void setCursor() {
+		setTopLine();
+		int indLine;
+		if (buffer.line > (Console.WindowHeight - 1)) {
+			indLine = buffer.line - topLine;
+		} else {
+			indLine = buffer.line;
+		}
+		Console.SetCursorPosition(getCursorXPos(indLine), buffer.line - topLine);
+	}
+
+	public void clearLine() {
+		Console.Write(new string(' ', Console.WindowWidth));
+	}
+
+
+
+	public void RedrawScreen() {
 		RedrawSection(topLine);
+	}
+
+
+
+	public void RedrawSection(int startLine) {
+		for (int i = startLine; i <= bottomLine; i++) {
+			RedrawLine(i);
+		}
+
+		if (screenCharCount.Count > bottomLine) {
+			for (int i = bottomLine + 1; i < screenCharCount.Count; i++) {
+				int screenLine = Math.Max(i - topLine, 0);
+				Console.SetCursorPosition(0, screenLine);
+				clearLine();
+			}
+
+			screenCharCount.RemoveRange(buffer.lines.Count, screenCharCount.Count - buffer.lines.Count);
+		}
 	}
 
 	public void RedrawLine(int indLineToRedraw) {
@@ -58,34 +100,5 @@ class Render {
 		Console.CursorVisible = true;
 	}
 
-	public void RedrawSection(int startLine) {
-		for (int i = startLine; i <= bottomLine; i++) {
-			RedrawLine(i);
-		}
 
-		if (screenCharCount.Count > bottomLine) {
-			for (int i = bottomLine + 1; i < screenCharCount.Count; i++) {
-				int screenLine = Math.Max(i - topLine, 0);
-				Console.SetCursorPosition(0, screenLine);
-				clearLine();
-			}
-
-			screenCharCount.RemoveRange(buffer.lines.Count, screenCharCount.Count - buffer.lines.Count);
-		}
-	}
-
-	public void setCursor() {
-		int indLine;
-		if (buffer.line > (Console.WindowHeight - 1)) {
-			indLine = buffer.line - topLine;
-		} else {
-			indLine = buffer.line;
-		}
-		Console.SetCursorPosition(getCursorXPos(indLine), buffer.line - topLine);
-	}
-
-
-	public void clearLine() {
-		Console.Write(new string(' ', Console.WindowWidth));
-	}
 }
