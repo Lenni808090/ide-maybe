@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Security.AccessControl;
 
 class Render {
 	List<int> screenCharCount;
@@ -13,92 +14,57 @@ class Render {
 		screenCharCount = new List<int>();
 	}
 
-	public int getCursorXPos(int indLine) {
-		return buffer.coloumn + indLine.ToString().Length + 1;
-	}
+	public void resetView() {
+		int h = Console.WindowHeight - 1;
+		int margin = Math.Min(5, h / 3);
 
-	public void setTopLine() {
-		if (Console.WindowHeight - 1 > 20) {
-			topLine = Math.Max(buffer.line - 10, 0);
-		} else {
-			topLine = Math.Max(buffer.line - (Console.WindowHeight - 1) / 2, 0);
-		}
-		bottomLine = Math.Min(topLine + (Console.WindowHeight - 1), buffer.lines.Count - 1);
-	}
-
-	public void setCursor() {
-		setTopLine();
-		int indLine;
-		if (buffer.line > (Console.WindowHeight - 1)) {
-			indLine = buffer.line - topLine;
-		} else {
-			indLine = buffer.line;
-		}
-		Console.SetCursorPosition(getCursorXPos(indLine), buffer.line - topLine);
-	}
-
-	public void clearLine() {
-		Console.Write(new string(' ', Console.WindowWidth));
-	}
-
-
-
-	public void RedrawScreen() {
-		RedrawSection(topLine);
-	}
-
-
-
-	public void RedrawSection(int startLine) {
-		for (int i = startLine; i <= bottomLine; i++) {
-			RedrawLine(i);
+		if (buffer.line < topLine + margin) {
+			topLine = buffer.line - margin;
+		} else if (buffer.line > topLine + h - margin) {
+			topLine = buffer.line - (h - margin);
 		}
 
-		if (screenCharCount.Count > bottomLine) {
-			for (int i = bottomLine + 1; i < screenCharCount.Count; i++) {
-				int screenLine = Math.Max(i - topLine, 0);
-				Console.SetCursorPosition(0, screenLine);
-				clearLine();
+		topLine = Math.Max(0, topLine);
+		topLine = Math.Min(topLine, buffer.lines.Count - h);
+
+		bottomLine = topLine + h;
+	}
+
+	public void setCursor(int lineInd) {
+		Console.SetCursorPosition(getCursorXPos(lineInd), getScreenLine(lineInd));
+	}
+
+	public int getScreenLine(int lineInd) {
+		return lineInd - topLine;
+	}
+
+	public void printLineNumber(int lineInd) {
+		Console.SetCursorPosition(0, getScreenLine(lineInd));
+		Console.ForegroundColor = ConsoleColor.DarkMagenta;
+		Console.Write(lineInd + "  ");
+		Console.ForegroundColor = ConsoleColor.DarkMagenta;
+	}
+
+	public int getCursorXPos(int lineInd) {
+		return lineInd.ToString().Length;
+	}
+
+	public void printLine(int lineInd) {
+		printLineNumber(lineInd);
+		List<char> lineToPrint = buffer.lines[lineInd];
+		foreach (char c in lineToPrint) {
+			Console.Write(c);
+		}
+		if (screenCharCount.Count - 1 < lineInd) {
+			screenCharCount.Add(lineToPrint.Count);
+		} else if (screenCharCount[lineInd] > lineToPrint.Count) {
+			for (int i = lineToPrint.Count; i < screenCharCount[lineInd]; i++) {
+				Console.Write(" ");
 			}
-
-			screenCharCount.RemoveRange(buffer.lines.Count, screenCharCount.Count - buffer.lines.Count);
 		}
+		setCursor(lineInd);
 	}
 
-	public void RedrawLine(int indLineToRedraw) {
-		Console.CursorVisible = false;
-		List<char> lineToRedraw = buffer.lines[indLineToRedraw];
-		int start = 0;
-		int screenLine = Math.Max(indLineToRedraw - topLine, 0);
-		Console.SetCursorPosition(start, screenLine);
-
-		Console.ForegroundColor = ConsoleColor.DarkRed;
-		Console.Write(indLineToRedraw + " ");
-		Console.ForegroundColor = ConsoleColor.White;
-
-		for (int i = start; i < lineToRedraw.Count; i++) {
-			Console.Write(lineToRedraw[i]);
-		}
-
-		int lineCount = lineToRedraw.Count;
-
-		int screenCount = 0;
-		if (screenCharCount.Count > indLineToRedraw) {
-			screenCount = screenCharCount[indLineToRedraw];
-		}
-
-		int remainingChars = (screenCount > lineCount) ? (screenCount - lineCount) : 0;
-
-		Console.Write(new string(' ', remainingChars));
-
-		if (screenCharCount.Count <= indLineToRedraw) {
-			screenCharCount.Add(lineCount);
-		} else {
-			screenCharCount[indLineToRedraw] = lineCount;
-		}
-
-		Console.CursorVisible = true;
-	}
 
 
 }

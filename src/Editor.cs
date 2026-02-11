@@ -14,8 +14,6 @@ class Editor {
 		Console.Clear();
 
 		buffer.lines = fileExplorer.readFile(@"C:\Users\leona\source\repos\ide-maybe\test.txt");
-		render.RedrawScreen();
-		render.setCursor();
 
 		while (true) {
 			ConsoleKeyInfo keyInfo = Console.ReadKey(intercept: true);
@@ -31,41 +29,15 @@ class Editor {
 
 			if (keyInfo.Key == ConsoleKey.Enter) {
 				buffer.newLine();
-				render.RedrawScreen();
-				render.setCursor();
+
 			} else if (keyInfo.Key == ConsoleKey.Backspace) {
-				bool fullRedraw = buffer.backspace();
-				if (fullRedraw) {
-					render.RedrawScreen();
-					render.setCursor();
-				} else {
-					render.RedrawLine(buffer.line);
-				}
+
 			} else if (keyInfo.Key == ConsoleKey.LeftArrow) {
-				buffer.moveLeft();
-				render.setCursor();
 			} else if (keyInfo.Key == ConsoleKey.RightArrow) {
-				buffer.moveRight();
-				render.setCursor();
 			} else if (keyInfo.Key == ConsoleKey.UpArrow) {
-				buffer.moveUp();
-				if (buffer.line == render.topLine) {
-					render.RedrawScreen();
-				}
-				render.setCursor();
 			} else if (keyInfo.Key == ConsoleKey.DownArrow) {
-				buffer.moveDown();
-				if (buffer.line == render.bottomLine) {
-					render.RedrawScreen();
-				}
-				render.setCursor();
 			} else if (!char.IsControl(keyInfo.KeyChar)) {
-				buffer.insertChar(keyInfo.KeyChar);
-				render.RedrawLine(buffer.line);
-				render.setCursor();
 			} else if (keyInfo.Key == ConsoleKey.Tab) {
-				buffer.insertTab(4);
-				render.setCursor();
 			}
 		}
 	}
