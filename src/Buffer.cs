@@ -59,6 +59,27 @@ class Buffer {
 			}
 		}
 	}
+
+
+	public void pasteCopiedLines() {
+		if (copiedLines.Count == 0) return;
+
+		foreach (char c in copiedLines[0])
+			lines[line].Add(c);
+
+		if (copiedLines.Count > 1) {
+			var linesToInsert = copiedLines.Skip(1)
+										   .Select(l => new List<char>(l))
+										   .ToList();
+			lines.InsertRange(line + 1, linesToInsert);
+			line += copiedLines.Count - 1;
+		}
+
+		coloumn = copiedLines.Last().Count;
+		prefColoum = coloumn;
+	}
+
+
 	public int getPrevWhiteSpaces() {
 		int whiteSpaceCount = 0;
 		List<char> lastLine = lines[line];
