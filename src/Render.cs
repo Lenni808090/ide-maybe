@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Security.AccessControl;
+using System.Threading.Tasks.Dataflow;
 
 class Render {
 	Buffer buffer;
@@ -7,10 +8,11 @@ class Render {
 	public int topLine = 0;
 	public int bottomLine = 0;
 
+	int currentDistFromEdge;
 
 	public Render(Buffer buffer) {
 		this.buffer = buffer;
-
+		currentDistFromEdge = 4;
 	}
 
 	public void resetView() {
@@ -46,15 +48,22 @@ class Render {
 		return lineInd - topLine;
 	}
 
+	public int getSpacesNeeded(int lineInd) {
+		if (lineInd.ToString().Length >= currentDistFromEdge) {
+			currentDistFromEdge = lineInd.ToString().Length + 2;
+		}
+		return currentDistFromEdge - lineInd.ToString().Length;
+	}
+
 	public void printLineNumber(int lineInd) {
 		Console.SetCursorPosition(0, getScreenLine(lineInd));
 		Console.ForegroundColor = ConsoleColor.DarkMagenta;
-		Console.Write(lineInd + "  ");
+		Console.Write(lineInd + new string(' ', getSpacesNeeded(lineInd)));
 		Console.ForegroundColor = ConsoleColor.White;
 	}
 
 	public int getCursorXPos(int lineInd) {
-		return lineInd.ToString().Length + buffer.coloumn + 2;
+		return lineInd.ToString().Length + buffer.coloumn + getSpacesNeeded(lineInd);
 	}
 
 	public void printLine(int lineInd) {
