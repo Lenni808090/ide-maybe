@@ -16,19 +16,28 @@ class Render {
 
 	public void resetView() {
 		int h = Console.WindowHeight - 1;
+
 		int margin = Math.Min(5, h / 3);
 
 		if (buffer.line < topLine + margin) {
 			topLine = buffer.line - margin;
-		} else if (buffer.line > topLine + h - margin) {
-			topLine = buffer.line - (h - margin);
+		}
+		else if (buffer.line >= topLine + h - margin) {
+			topLine = buffer.line - (h - margin - 1);
 		}
 
-		topLine = Math.Max(0, topLine);
-		topLine = Math.Min(topLine, buffer.lines.Count - h);
+		if (topLine < 0) {
+			topLine = 0;
+		}
 
-		bottomLine = topLine + h;
+		int maxTop = Math.Max(0, buffer.lines.Count - h);
+		if (topLine > maxTop) {
+			topLine = maxTop;
+		}
+
+		bottomLine = Math.Min(topLine + h, buffer.lines.Count);
 	}
+
 
 	public void setCursor(int lineInd) {
 		Console.SetCursorPosition(getCursorXPos(lineInd), getScreenLine(lineInd));
@@ -42,11 +51,11 @@ class Render {
 		Console.SetCursorPosition(0, getScreenLine(lineInd));
 		Console.ForegroundColor = ConsoleColor.DarkMagenta;
 		Console.Write(lineInd + "  ");
-		Console.ForegroundColor = ConsoleColor.DarkMagenta;
+		Console.ForegroundColor = ConsoleColor.White;
 	}
 
 	public int getCursorXPos(int lineInd) {
-		return lineInd.ToString().Length;
+		return lineInd.ToString().Length + buffer.coloumn + 2;
 	}
 
 	public void printLine(int lineInd) {
@@ -57,14 +66,38 @@ class Render {
 		}
 		if (screenCharCount.Count - 1 < lineInd) {
 			screenCharCount.Add(lineToPrint.Count);
-		} else if (screenCharCount[lineInd] > lineToPrint.Count) {
+		}
+		else if (screenCharCount[lineInd] > lineToPrint.Count) {
 			for (int i = lineToPrint.Count; i < screenCharCount[lineInd]; i++) {
 				Console.Write(" ");
 			}
 		}
+		else {
+			screenCharCount[lineInd] = lineToPrint.Count;
+		}
 		setCursor(lineInd);
 	}
 
+	public void printSection(int startLineInd) {
+		for (int i = startLineInd; i < bottomLine; i++) {
+			printLine(i);
+		}
+
+		if (screenCharCount.Count > buffer.lines.Count) {
+			if (bottomLine + Console.WindowHeight - 1 > screenCharCount.Count) {
+				Console.SetCursorPosition(0, bottomLine);
+				for (int i = buffer.lines.Count; i < screenCharCount.Count; i++) {
+					Console.WriteLine(new string(' ', Console.WindowWidth));
+				}
+			}
+			screenCharCount.RemoveRange(buffer.lines.Count - 1, screenCharCount.Count - buffer.lines.Count);
+		}
+		setCursor(buffer.line);
+	}
+
+	public void printScreen() {
+		printSection(topLine);
+	}
 
 
 }
