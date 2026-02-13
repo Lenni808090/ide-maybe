@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Security.AccessControl;
 
 class Render {
-	List<int> screenCharCount;
 	Buffer buffer;
 
 	public int topLine = 0;
@@ -11,7 +10,7 @@ class Render {
 
 	public Render(Buffer buffer) {
 		this.buffer = buffer;
-		screenCharCount = new List<int>();
+
 	}
 
 	public void resetView() {
@@ -66,17 +65,6 @@ class Render {
 			Console.Write(c);
 		}
 		Console.Write("\x1b[K");
-		if (screenCharCount.Count - 1 < lineInd) {
-			screenCharCount.Add(lineToPrint.Count);
-		}
-		else if (screenCharCount[lineInd] > lineToPrint.Count) {
-			for (int i = lineToPrint.Count; i < screenCharCount[lineInd]; i++) {
-				Console.Write(" ");
-			}
-		}
-		else {
-			screenCharCount[lineInd] = lineToPrint.Count;
-		}
 		setCursor(lineInd);
 		Console.CursorVisible = true;
 	}
@@ -85,15 +73,11 @@ class Render {
 		for (int i = startLineInd; i < bottomLine; i++) {
 			printLine(i);
 		}
-
-		if (screenCharCount.Count > buffer.lines.Count) {
-			if (bottomLine + Console.WindowHeight - 1 > screenCharCount.Count) {
-				Console.SetCursorPosition(0, bottomLine);
-				for (int i = buffer.lines.Count; i < screenCharCount.Count; i++) {
-					Console.WriteLine(new string(' ', Console.WindowWidth));
-				}
+		if (bottomLine < Console.WindowHeight - 1) {
+			for (int i = bottomLine; i < Console.WindowHeight - 1; i++) {
+				Console.SetCursorPosition(0, getScreenLine(bottomLine));
+				Console.Write("\x1b[K");
 			}
-			screenCharCount.RemoveRange(buffer.lines.Count - 1, screenCharCount.Count - buffer.lines.Count);
 		}
 		setCursor(buffer.line);
 	}
