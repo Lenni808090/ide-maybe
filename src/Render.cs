@@ -59,11 +59,13 @@ class Render {
 	}
 
 	public void printLine(int lineInd) {
+		Console.CursorVisible = false;
 		printLineNumber(lineInd);
 		List<char> lineToPrint = buffer.lines[lineInd];
 		foreach (char c in lineToPrint) {
 			Console.Write(c);
 		}
+		Console.Write("\x1b[K");
 		if (screenCharCount.Count - 1 < lineInd) {
 			screenCharCount.Add(lineToPrint.Count);
 		}
@@ -76,6 +78,7 @@ class Render {
 			screenCharCount[lineInd] = lineToPrint.Count;
 		}
 		setCursor(lineInd);
+		Console.CursorVisible = true;
 	}
 
 	public void printSection(int startLineInd) {

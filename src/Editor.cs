@@ -10,6 +10,8 @@ class Editor {
 		render = new Render(buffer);
 		fileExplorer = new FileExplorer();
 	}
+
+	int prevTopLine;
 	public void startEditor() {
 		Console.Clear();
 
@@ -46,18 +48,38 @@ class Editor {
 			}
 			else if (keyInfo.Key == ConsoleKey.LeftArrow) {
 				buffer.moveLeft();
+				render.resetView();
+				if (prevTopLine != render.topLine) {
+					render.printScreen();
+				}
+				prevTopLine = render.topLine;
 				render.setCursor(buffer.line);
 			}
 			else if (keyInfo.Key == ConsoleKey.RightArrow) {
 				buffer.moveRight();
+				render.resetView();
+				if (prevTopLine != render.topLine) {
+					render.printScreen();
+				}
+				prevTopLine = render.topLine;
 				render.setCursor(buffer.line);
 			}
 			else if (keyInfo.Key == ConsoleKey.UpArrow) {
 				buffer.moveUp();
+				render.resetView();
+				if (prevTopLine != render.topLine) {
+					render.printScreen();
+				}
+				prevTopLine = render.topLine;
 				render.setCursor(buffer.line);
 			}
 			else if (keyInfo.Key == ConsoleKey.DownArrow) {
 				buffer.moveDown();
+				render.resetView();
+				if (prevTopLine != render.topLine) {
+					render.printScreen();
+				}
+				prevTopLine = render.topLine;
 				render.setCursor(buffer.line);
 			}
 			else if (!char.IsControl(keyInfo.KeyChar)) {
