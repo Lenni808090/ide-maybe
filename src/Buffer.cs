@@ -5,6 +5,11 @@ using System.Security.Cryptography.X509Certificates;
 
 class Buffer {
 	public List<List<char>> lines = new List<List<char>>();
+	public (int startLine, int startColumn) startSelection;
+	public (int endLine, int endColumn) endSelection;
+
+	public List<List<char>> copiedLines = new List<List<char>>();
+	public bool isSelecting;
 	public int line = 0;
 	public int coloumn = 0;
 	public int prefColoum = 0;
@@ -13,14 +18,55 @@ class Buffer {
 		lines.Add(new List<char>());
 	}
 
+	public void startSelecting() {
+		isSelecting = true;
+		startSelection = (line, coloumn);
+	}
 
+	public void stopSelecting() {
+		endSelection = (line, coloumn);
+	}
+
+	public void copyLines() {
+		if (isSelecting) {
+			copiedLines.Clear();
+
+			int startLineCopy = Math.Min(startSelection.startLine, endSelection.endLine);
+			int endLineCopy = Math.Max(startSelection.startLine, endSelection.endLine);
+			int startColumnCopy;
+			int endColumnCopy;
+			if (startLineCopy == startSelection.startLine) {
+				startColumnCopy = startSelection.startColumn;
+				endColumnCopy = endSelection.endColumn;
+			}
+			else {
+				startColumnCopy = endSelection.endColumn;
+				endColumnCopy = startSelection.startColumn;
+			}
+
+			for (int i = startLineCopy; i <= endLineCopy; i++) {
+				if (i == startLineCopy) {
+					List<char> firstCopiedLine = lines[startLineCopy].GetRange(startColumnCopy, lines[startLineCopy].Count - startColumnCopy);
+					copiedLines.Add(firstCopiedLine);
+				}
+				else if (i == endLineCopy) {
+					List<char> lastLineCopied = lines[endLineCopy].GetRange(0, endColumnCopy);
+					copiedLines.Add(lastLineCopied);
+				}
+				else {
+					copiedLines.Add(new List<char>(lines[i]));
+				}
+			}
+		}
+	}
 	public int getPrevWhiteSpaces() {
 		int whiteSpaceCount = 0;
 		List<char> lastLine = lines[line];
 		foreach (char c in lastLine) {
 			if (char.IsWhiteSpace(c)) {
 				whiteSpaceCount++;
-			} else {
+			}
+			else {
 				break;
 			}
 		}
@@ -36,7 +82,8 @@ class Buffer {
 				if (toDeleteSpaces == 4) {
 					return true;
 				}
-			} else {
+			}
+			else {
 				return false;
 			}
 		}
@@ -64,9 +111,12 @@ class Buffer {
 		line--;
 		if (prefColoum <= lines[line].Count) {
 			coloumn = prefColoum;
-		} else if (prefColoum > lines[line].Count) {
+		}
+		else if (prefColoum > lines[line].Count) {
 			coloumn = lines[line].Count;
 		}
+
+		isSelecting = false;
 	}
 
 	public void moveDown() {
@@ -76,9 +126,12 @@ class Buffer {
 		line++;
 		if (prefColoum <= lines[line].Count) {
 			coloumn = prefColoum;
-		} else if (prefColoum > lines[line].Count) {
+		}
+		else if (prefColoum > lines[line].Count) {
 			coloumn = lines[line].Count;
 		}
+
+		isSelecting = false;
 	}
 
 	public void moveRight() {
@@ -89,10 +142,13 @@ class Buffer {
 			line++;
 			coloumn = 0;
 			prefColoum = coloumn;
-		} else {
+		}
+		else {
 			coloumn++;
 			prefColoum = coloumn;
 		}
+
+		isSelecting = false;
 	}
 
 	public void moveLeft() {
@@ -103,10 +159,13 @@ class Buffer {
 			line--;
 			coloumn = lines[line].Count;
 			prefColoum = coloumn;
-		} else {
+		}
+		else {
 			coloumn--;
 			prefColoum = coloumn;
 		}
+
+		isSelecting = false;
 	}
 
 	public bool backspace() {
@@ -115,13 +174,16 @@ class Buffer {
 				lines[line].RemoveAt(Math.Max(coloumn - 4, 0));
 				prefColoum -= 4;
 				coloumn = prefColoum;
-			} else {
+			}
+			else {
 				lines[line].RemoveAt(Math.Max(coloumn - 1, 0));
 				prefColoum--;
 				coloumn = prefColoum;
 			}
+
 			return false;
-		} else {
+		}
+		else {
 			int lineBefore = line - 1;
 
 			if (lineBefore < 0) {
@@ -138,8 +200,10 @@ class Buffer {
 				foreach (char c in toAddLine) {
 					lines[line].Add(c);
 				}
+
 				return true;
 			}
+
 			return false;
 		}
 	}
@@ -159,6 +223,7 @@ class Buffer {
 		lines[line].Insert(coloumn, c);
 		prefColoum++;
 		coloumn = prefColoum;
+
 	}
 
 	public void insertTab(int count) {
