@@ -47,7 +47,21 @@ class Editor {
 				}
 			}
 			else if (keyInfo.Key == ConsoleKey.LeftArrow) {
-				buffer.moveLeft();
+				if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Shift)) {
+					if (!buffer.isSelecting) {
+						buffer.startSelecting();
+						buffer.moveLeft();
+						buffer.updateSelection();
+					}
+					else {
+						buffer.moveLeft();
+						buffer.updateSelection();
+					}
+				}
+				else {
+					buffer.moveLeft();
+					buffer.stopSelecting();
+				}
 				render.resetView();
 				if (prevTopLine != render.topLine) {
 					render.printScreen();
@@ -56,7 +70,21 @@ class Editor {
 				render.setCursor(buffer.line);
 			}
 			else if (keyInfo.Key == ConsoleKey.RightArrow) {
-				buffer.moveRight();
+				if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Shift)) {
+					if (!buffer.isSelecting) {
+						buffer.startSelecting();
+						buffer.moveRight();
+						buffer.updateSelection();
+					}
+					else {
+						buffer.moveRight();
+						buffer.updateSelection();
+					}
+				}
+				else {
+					buffer.moveRight();
+					buffer.stopSelecting();
+				}
 				render.resetView();
 				if (prevTopLine != render.topLine) {
 					render.printScreen();
@@ -65,7 +93,21 @@ class Editor {
 				render.setCursor(buffer.line);
 			}
 			else if (keyInfo.Key == ConsoleKey.UpArrow) {
-				buffer.moveUp();
+				if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Shift)) {
+					if (!buffer.isSelecting) {
+						buffer.startSelecting();
+						buffer.moveUp();
+						buffer.updateSelection();
+					}
+					else {
+						buffer.moveUp();
+						buffer.updateSelection();
+					}
+				}
+				else {
+					buffer.moveUp();
+					buffer.stopSelecting();
+				}
 				render.resetView();
 				if (prevTopLine != render.topLine) {
 					render.printScreen();
@@ -74,7 +116,21 @@ class Editor {
 				render.setCursor(buffer.line);
 			}
 			else if (keyInfo.Key == ConsoleKey.DownArrow) {
-				buffer.moveDown();
+				if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Shift)) {
+					if (!buffer.isSelecting) {
+						buffer.startSelecting();
+						buffer.moveDown();
+						buffer.updateSelection();
+					}
+					else {
+						buffer.moveDown();
+						buffer.updateSelection();
+					}
+				}
+				else {
+					buffer.moveDown();
+					buffer.stopSelecting();
+				}
 				render.resetView();
 				if (prevTopLine != render.topLine) {
 					render.printScreen();

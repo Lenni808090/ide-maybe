@@ -23,8 +23,14 @@ class Buffer {
 		startSelection = (line, coloumn);
 	}
 
+	public void updateSelection() {
+		if (isSelecting) {
+			endSelection = (line, coloumn);
+		}
+	}
+
 	public void stopSelecting() {
-		endSelection = (line, coloumn);
+		isSelecting = false;
 	}
 
 	public void copyLines() {
@@ -63,9 +69,8 @@ class Buffer {
 
 	public void pasteCopiedLines() {
 		if (copiedLines.Count == 0) return;
+		lines[line].InsertRange(coloumn, copiedLines[0]);
 
-		foreach (char c in copiedLines[0])
-			lines[line].Add(c);
 
 		if (copiedLines.Count > 1) {
 			var linesToInsert = copiedLines.Skip(1)
