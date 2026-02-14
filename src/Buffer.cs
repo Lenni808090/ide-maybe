@@ -9,7 +9,6 @@ class Buffer {
 	public (int startLine, int startColumn) startSelection;
 	public (int endLine, int endColumn) endSelection;
 
-	public List<List<char>> copiedLines = new List<List<char>>();
 	public bool isSelecting;
 	public int line = 0;
 	public int coloumn = 0;
@@ -38,8 +37,7 @@ class Buffer {
 
 	public async Task copyLines() {
 		if (isSelecting) {
-			copiedLines.Clear();
-
+			List<List<char>> copiedLines = new List<List<char>>();
 			int startLineCopy = Math.Min(startSelection.startLine, endSelection.endLine);
 			int endLineCopy = Math.Max(startSelection.startLine, endSelection.endLine);
 
@@ -94,12 +92,30 @@ class Buffer {
 		}
 	}
 
-	public void getClipboardContent() {
+	public async Task<List<List<char>>?> getClipboardContentAsync() {
+		string? clipboardString = await ClipboardService.GetTextAsync();
 
+		if (clipboardString == null) {
+			return null;
+		}
+
+		List<string> clipboardStringLines = clipboardString.Split('\n').ToList();
+		List<List<char>> clipboardCharLines = new List<List<char>>();
+
+		foreach (string line in clipboardStringLines) {
+			clipboardCharLines.Add(new List<char>(line));
+		}
+
+		return clipboardCharLines;
 	}
 
-	public void pasteCopiedLines() {
-		if (copiedLines.Count == 0) return;
+	public async Task pasteCopiedLines() {
+		List<List<char>>? copiedLines = await getClipboardContentAsync();
+
+		if (copiedLines == null) {
+			return;
+		}
+
 		lines[line].InsertRange(coloumn, copiedLines[0]);
 
 
