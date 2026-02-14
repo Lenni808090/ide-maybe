@@ -66,13 +66,64 @@ class Render {
 		return lineInd.ToString().Length + buffer.coloumn + getSpacesNeeded(lineInd);
 	}
 
+	public (int startLine, int endLine, int startColumn, int endColumn) getSelectedArea() {
+		int startLine = Math.Min(buffer.startSelection.startLine, buffer.endSelection.endLine);
+		int endLine = Math.Max(buffer.startSelection.startLine, buffer.endSelection.endLine);
+
+		int startColumn;
+		int endColumn;
+
+		if (buffer.startSelection.startLine == buffer.endSelection.endLine) {
+			startColumn = Math.Min(buffer.startSelection.startColumn, buffer.endSelection.endColumn);
+			endColumn = Math.Max(buffer.startSelection.startColumn, buffer.endSelection.endColumn);
+		}
+		else if (startLine == buffer.startSelection.startLine) {
+			startColumn = buffer.startSelection.startColumn;
+			endColumn = buffer.endSelection.endColumn;
+		}
+		else {
+			startColumn = buffer.endSelection.endColumn;
+			endColumn = buffer.startSelection.startColumn;
+		}
+
+		return (startLine, endLine, startColumn, endColumn);
+	}
+
+
 	public void printLine(int lineInd) {
 		Console.CursorVisible = false;
 		printLineNumber(lineInd);
 		List<char> lineToPrint = buffer.lines[lineInd];
-		foreach (char c in lineToPrint) {
-			Console.Write(c);
+
+		int i = 0;
+
+		var selectedArea = getSelectedArea();
+
+		if (buffer.isSelecting) {
+			if (selectedArea.startLine < lineInd && selectedArea.endLine > lineInd) {
+				Console.BackgroundColor = ConsoleColor.Cyan;
+			}
+
+
+			foreach (char c in lineToPrint) {
+				if (Console.BackgroundColor != ConsoleColor.Cyan) {
+					if (selectedArea.startLine == lineInd && selectedArea.startColumn == i) {
+						Console.BackgroundColor = ConsoleColor.Cyan;
+					}
+					else if (selectedArea.startLine == lineInd && selectedArea.endColumn == i) {
+						Console.BackgroundColor = ConsoleColor.Black;
+					}
+				}
+				Console.Write(c);
+				i++;
+			}
 		}
+		else {
+			foreach (char c in lineToPrint) {
+				Console.Write(c);
+			}
+		}
+		Console.BackgroundColor = ConsoleColor.Black;
 		Console.Write("\x1b[K");
 		setCursor(lineInd);
 		Console.CursorVisible = true;

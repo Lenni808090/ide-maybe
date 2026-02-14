@@ -41,9 +41,13 @@ class Buffer {
 			int endLineCopy = Math.Max(startSelection.startLine, endSelection.endLine);
 			int startColumnCopy;
 			int endColumnCopy;
-			if (startLineCopy == startSelection.startLine) {
+			if (startSelection.startLine == endSelection.endLine) {
 				startColumnCopy = startSelection.startColumn;
 				endColumnCopy = endSelection.endColumn;
+			}
+			else if (startLineCopy == startSelection.startLine) {
+				startColumnCopy = Math.Min(startSelection.startColumn, endSelection.endColumn);
+				endColumnCopy = Math.Max(startSelection.startColumn, endSelection.endColumn);
 			}
 			else {
 				startColumnCopy = endSelection.endColumn;
