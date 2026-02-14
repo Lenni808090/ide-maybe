@@ -104,6 +104,9 @@ class Render {
 				Console.BackgroundColor = ConsoleColor.Cyan;
 			}
 
+			if (lineToPrint.Count == 0 && Console.BackgroundColor == ConsoleColor.Cyan) {
+				Console.Write(" ");
+			}
 
 			foreach (char c in lineToPrint) {
 				if (selectedArea.startLine == lineInd && selectedArea.startColumn == i) {
@@ -117,6 +120,7 @@ class Render {
 						Console.BackgroundColor = ConsoleColor.Black;
 					}
 				}
+
 				Console.Write(c);
 				i++;
 			}
