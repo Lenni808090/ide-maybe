@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Security.Cryptography.X509Certificates;
+using TextCopy;
 
 class Buffer {
 	public List<List<char>> lines = new List<List<char>>();
@@ -31,23 +32,27 @@ class Buffer {
 
 	public void stopSelecting() {
 		isSelecting = false;
+		startSelection = (0, 0);
+		endSelection = (0, 0);
 	}
 
-	public void copyLines() {
+	public async Task copyLines() {
 		if (isSelecting) {
 			copiedLines.Clear();
 
 			int startLineCopy = Math.Min(startSelection.startLine, endSelection.endLine);
 			int endLineCopy = Math.Max(startSelection.startLine, endSelection.endLine);
+
 			int startColumnCopy;
 			int endColumnCopy;
+
 			if (startSelection.startLine == endSelection.endLine) {
-				startColumnCopy = startSelection.startColumn;
-				endColumnCopy = endSelection.endColumn;
-			}
-			else if (startLineCopy == startSelection.startLine) {
 				startColumnCopy = Math.Min(startSelection.startColumn, endSelection.endColumn);
 				endColumnCopy = Math.Max(startSelection.startColumn, endSelection.endColumn);
+			}
+			else if (startSelection.startLine == startLineCopy) {
+				startColumnCopy = startSelection.startColumn;
+				endColumnCopy = endSelection.endColumn;
 			}
 			else {
 				startColumnCopy = endSelection.endColumn;
@@ -56,7 +61,13 @@ class Buffer {
 
 			for (int i = startLineCopy; i <= endLineCopy; i++) {
 				if (i == startLineCopy) {
-					List<char> firstCopiedLine = lines[startLineCopy].GetRange(startColumnCopy, lines[startLineCopy].Count - startColumnCopy);
+					List<char> firstCopiedLine = new List<char>();
+					if (startLineCopy == endLineCopy) {
+						firstCopiedLine = lines[startLineCopy].GetRange(startColumnCopy, endColumnCopy - startColumnCopy);
+					}
+					else {
+						firstCopiedLine = lines[startLineCopy].GetRange(startColumnCopy, lines[startLineCopy].Count - startColumnCopy);
+					}
 					copiedLines.Add(firstCopiedLine);
 				}
 				else if (i == endLineCopy) {
@@ -67,9 +78,25 @@ class Buffer {
 					copiedLines.Add(new List<char>(lines[i]));
 				}
 			}
+			string copiedLinesString = "";
+
+			foreach (List<char> line in copiedLines) {
+				string stringLine = new string(line.ToArray());
+				if (copiedLinesString.Length == 0) {
+					copiedLinesString += stringLine;
+				}
+				else {
+					copiedLinesString += "\n" + stringLine;
+				}
+			}
+
+			await ClipboardService.SetTextAsync(copiedLinesString);
 		}
 	}
 
+	public void getClipboardContent() {
+
+	}
 
 	public void pasteCopiedLines() {
 		if (copiedLines.Count == 0) return;

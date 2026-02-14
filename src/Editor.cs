@@ -9,6 +9,11 @@ class Editor {
 		buffer = new Buffer();
 		render = new Render(buffer);
 		fileExplorer = new FileExplorer();
+
+		Console.CancelKeyPress += (s, e) => {
+			e.Cancel = true;
+			buffer.copyLines();
+		};
 	}
 
 	int prevTopLine;
@@ -23,7 +28,7 @@ class Editor {
 			ConsoleKeyInfo keyInfo = Console.ReadKey(intercept: true);
 
 
-			if (keyInfo.Key == ConsoleKey.C && keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)) {
+			if (keyInfo.Key == ConsoleKey.Q && keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)) {
 				Console.Clear();
 				Console.CursorVisible = true;
 				Console.WriteLine("till next time");
@@ -63,6 +68,7 @@ class Editor {
 					buffer.moveLeft();
 					if (buffer.isSelecting) {
 						buffer.stopSelecting();
+						render.resetView();
 						render.printScreen();
 					}
 				}
@@ -90,6 +96,7 @@ class Editor {
 					buffer.moveRight();
 					if (buffer.isSelecting) {
 						buffer.stopSelecting();
+						render.resetView();
 						render.printScreen();
 					}
 				}
@@ -117,6 +124,7 @@ class Editor {
 					buffer.moveUp();
 					if (buffer.isSelecting) {
 						buffer.stopSelecting();
+						render.resetView();
 						render.printScreen();
 					}
 				}
@@ -144,6 +152,7 @@ class Editor {
 					buffer.moveDown();
 					if (buffer.isSelecting) {
 						buffer.stopSelecting();
+						render.resetView();
 						render.printScreen();
 					}
 				}
@@ -157,6 +166,16 @@ class Editor {
 			else if (!char.IsControl(keyInfo.KeyChar)) {
 				buffer.insertChar(keyInfo.KeyChar);
 				render.printLine(buffer.line);
+			}
+			else if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)) {
+				if (keyInfo.Key == ConsoleKey.C) {
+					buffer.copyLines();
+				}
+				else if (keyInfo.Key == ConsoleKey.V) {
+					buffer.pasteCopiedLines();
+					render.resetView();
+					render.printScreen();
+				}
 			}
 			else if (keyInfo.Key == ConsoleKey.Tab) {
 				buffer.insertTab(4);
