@@ -146,7 +146,6 @@ class Buffer {
 			coloumn = lines[line].Count;
 		}
 
-		isSelecting = false;
 	}
 
 	public void moveDown() {
@@ -161,7 +160,6 @@ class Buffer {
 			coloumn = lines[line].Count;
 		}
 
-		isSelecting = false;
 	}
 
 	public void moveRight() {
@@ -178,7 +176,6 @@ class Buffer {
 			prefColoum = coloumn;
 		}
 
-		isSelecting = false;
 	}
 
 	public void moveLeft() {
@@ -195,7 +192,6 @@ class Buffer {
 			prefColoum = coloumn;
 		}
 
-		isSelecting = false;
 	}
 
 	public bool backspace() {

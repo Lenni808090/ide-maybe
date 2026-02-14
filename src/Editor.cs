@@ -57,10 +57,14 @@ class Editor {
 						buffer.moveLeft();
 						buffer.updateSelection();
 					}
+					render.printScreen();
 				}
 				else {
 					buffer.moveLeft();
-					buffer.stopSelecting();
+					if (buffer.isSelecting) {
+						buffer.stopSelecting();
+						render.printScreen();
+					}
 				}
 				render.resetView();
 				if (prevTopLine != render.topLine) {
@@ -80,10 +84,14 @@ class Editor {
 						buffer.moveRight();
 						buffer.updateSelection();
 					}
+					render.printScreen();
 				}
 				else {
 					buffer.moveRight();
-					buffer.stopSelecting();
+					if (buffer.isSelecting) {
+						buffer.stopSelecting();
+						render.printScreen();
+					}
 				}
 				render.resetView();
 				if (prevTopLine != render.topLine) {
@@ -103,10 +111,14 @@ class Editor {
 						buffer.moveUp();
 						buffer.updateSelection();
 					}
+					render.printScreen();
 				}
 				else {
 					buffer.moveUp();
-					buffer.stopSelecting();
+					if (buffer.isSelecting) {
+						buffer.stopSelecting();
+						render.printScreen();
+					}
 				}
 				render.resetView();
 				if (prevTopLine != render.topLine) {
@@ -126,10 +138,14 @@ class Editor {
 						buffer.moveDown();
 						buffer.updateSelection();
 					}
+					render.printScreen();
 				}
 				else {
 					buffer.moveDown();
-					buffer.stopSelecting();
+					if (buffer.isSelecting) {
+						buffer.stopSelecting();
+						render.printScreen();
+					}
 				}
 				render.resetView();
 				if (prevTopLine != render.topLine) {

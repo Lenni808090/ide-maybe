@@ -97,20 +97,23 @@ class Render {
 
 		int i = 0;
 
-		var selectedArea = getSelectedArea();
 
 		if (buffer.isSelecting) {
+			var selectedArea = getSelectedArea();
 			if (selectedArea.startLine < lineInd && selectedArea.endLine > lineInd) {
 				Console.BackgroundColor = ConsoleColor.Cyan;
 			}
 
 
 			foreach (char c in lineToPrint) {
-				if (Console.BackgroundColor != ConsoleColor.Cyan) {
-					if (selectedArea.startLine == lineInd && selectedArea.startColumn == i) {
+				if (selectedArea.startLine == lineInd && selectedArea.startColumn == i) {
+					Console.BackgroundColor = ConsoleColor.Cyan;
+				}
+				else if (selectedArea.endLine == lineInd) {
+					if (i < selectedArea.endColumn && selectedArea.endLine != selectedArea.startLine) {
 						Console.BackgroundColor = ConsoleColor.Cyan;
 					}
-					else if (selectedArea.startLine == lineInd && selectedArea.endColumn == i) {
+					else if (i == selectedArea.endColumn) {
 						Console.BackgroundColor = ConsoleColor.Black;
 					}
 				}
@@ -119,6 +122,7 @@ class Render {
 			}
 		}
 		else {
+			Console.BackgroundColor = ConsoleColor.Black;
 			foreach (char c in lineToPrint) {
 				Console.Write(c);
 			}
