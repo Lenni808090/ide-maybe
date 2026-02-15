@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Text;
 class FileExplorer {
 	public string cuurentFilePath = "";
 
@@ -17,4 +18,22 @@ class FileExplorer {
 		cuurentFilePath = filePath;
 		return readFile;
 	}
+
+	public void saveFile(string path, List<List<char>> contentList) {
+		string tempPath = path + ".tmp";
+		var sb = new StringBuilder();
+
+		for (int i = 0; i < contentList.Count; i++) {
+			sb.Append(contentList[i].ToArray());
+			if (i < contentList.Count - 1)
+				sb.Append(Environment.NewLine);
+		}
+
+		string text = sb.ToString();
+
+		File.WriteAllText(tempPath, text);
+		File.Replace(tempPath, path, null);
+	}
+
+
 }

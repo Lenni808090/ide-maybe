@@ -94,7 +94,7 @@ class Render {
 	}
 
 
-	public void printLine(int lineInd) {
+	public void printLine(int lineInd, bool completeRedraw) {
 		Console.CursorVisible = false;
 		printLineNumber(lineInd);
 		List<char> lineToPrint = buffer.lines[lineInd];
@@ -143,12 +143,14 @@ class Render {
 		Console.BackgroundColor = ConsoleColor.Black;
 		Console.Write("\x1b[K");
 		setCursor(lineInd);
-		Console.CursorVisible = true;
+		if (!completeRedraw) {
+			Console.CursorVisible = true;
+		}
 	}
 
 	public void printSection(int startLineInd) {
 		for (int i = startLineInd; i < bottomLine; i++) {
-			printLine(i);
+			printLine(i, true);
 		}
 		if (bottomLine < ContentHeight) {
 			for (int i = bottomLine; i < ContentHeight; i++) {
@@ -157,6 +159,7 @@ class Render {
 			}
 		}
 		setCursor(buffer.line);
+		Console.CursorVisible = true;
 	}
 
 	public void printScreen() {

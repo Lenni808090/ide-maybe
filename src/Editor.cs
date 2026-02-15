@@ -62,7 +62,8 @@ class Editor {
 				}
 				else {
 					buffer.insertChar(keyInfo.KeyChar);
-					render.printLine(buffer.line);
+					render.resetView();
+					render.printScreen();
 					continue;
 				}
 			}
@@ -79,7 +80,7 @@ class Editor {
 					render.printScreen();
 				}
 				else {
-					render.printLine(buffer.line);
+					render.printLine(buffer.line, false);
 				}
 			}
 			else if (keyInfo.Key == ConsoleKey.LeftArrow) {
@@ -175,16 +176,19 @@ class Editor {
 				if (keyInfo.Key == ConsoleKey.C) {
 					await buffer.copyLines();
 				}
-
-				if (keyInfo.Key == ConsoleKey.X) {
+				else if (keyInfo.Key == ConsoleKey.X) {
 					await buffer.cutLines();
 					render.resetView();
 					render.printScreen();
 				}
+				else if (keyInfo.Key == ConsoleKey.A) {
+					fileExplorer.saveFile(fileExplorer.cuurentFilePath, buffer.lines);
+				}
 			}
+
 			else if (keyInfo.Key == ConsoleKey.Tab) {
 				buffer.insertTab(4);
-				render.printLine(buffer.line);
+				render.printLine(buffer.line, false);
 			}
 
 			var updatedStatusBar = statusBar.UpdateStatusBar();
