@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 
 class Program {
-	static void Main() {
-
+	static async Task Main() {
 		Editor editor = new Editor();
-		editor.startEditor();
+		await editor.startEditor();
 	}
 
 }

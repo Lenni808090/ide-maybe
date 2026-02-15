@@ -35,6 +35,47 @@ class Buffer {
 		endSelection = (0, 0);
 	}
 
+
+	public void pasteData(List<List<char>> pasteDataLines) {
+		if (isSelecting) {
+
+		}
+		else {
+			insertLinesAtCursor(pasteDataLines);
+		}
+	}
+
+	public void insertLinesAtCursor(List<List<char>> linesToInsert) {
+		if (linesToInsert.Count == 0) return;
+
+		List<char> remainingLine = lines[line].Slice(coloumn, lines[line].Count - coloumn);
+		lines[line].RemoveRange(coloumn, lines[line].Count - coloumn);
+		lines[line].InsertRange(coloumn, linesToInsert[0]);
+		int firstLineLenght = linesToInsert[0].Count;
+		linesToInsert.RemoveAt(0);
+		int i = line;
+		int j = 0;
+		if (linesToInsert.Count != 0) {
+			i++;
+			foreach (List<char> linetoInsert in linesToInsert) {
+				lines.Insert(i, linetoInsert);
+				j++;
+				if (j < linesToInsert.Count) {
+					i++;
+				}
+			}
+		}
+		lines[i].AddRange(remainingLine);
+		line = i;
+		if (linesToInsert.Count - 1 < 0) {
+			coloumn = firstLineLenght + coloumn;
+		}
+		else {
+			coloumn = linesToInsert[linesToInsert.Count - 1].Count;
+		}
+		prefColoum = coloumn;
+	}
+
 	public async Task copyLines() {
 		if (isSelecting) {
 			List<List<char>> copiedLines = new List<List<char>>();
@@ -91,46 +132,6 @@ class Buffer {
 			await ClipboardService.SetTextAsync(copiedLinesString);
 		}
 	}
-
-	public async Task<List<List<char>>?> getClipboardContentAsync() {
-		string? clipboardString = await ClipboardService.GetTextAsync();
-
-		if (clipboardString == null) {
-			return null;
-		}
-
-		List<string> clipboardStringLines = clipboardString.Split('\n').ToList();
-		List<List<char>> clipboardCharLines = new List<List<char>>();
-
-		foreach (string line in clipboardStringLines) {
-			clipboardCharLines.Add(new List<char>(line));
-		}
-
-		return clipboardCharLines;
-	}
-
-	public async Task pasteCopiedLines() {
-		List<List<char>>? copiedLines = await getClipboardContentAsync();
-
-		if (copiedLines == null) {
-			return;
-		}
-
-		lines[line].InsertRange(coloumn, copiedLines[0]);
-
-
-		if (copiedLines.Count > 1) {
-			var linesToInsert = copiedLines.Skip(1)
-										   .Select(l => new List<char>(l))
-										   .ToList();
-			lines.InsertRange(line + 1, linesToInsert);
-			line += copiedLines.Count - 1;
-		}
-
-		coloumn = copiedLines.Last().Count;
-		prefColoum = coloumn;
-	}
-
 
 	public int getPrevWhiteSpaces() {
 		int whiteSpaceCount = 0;
