@@ -41,7 +41,7 @@ class Editor {
 				break;
 			}
 
-			if (Console.KeyAvailable && !char.IsControl(keyInfo.KeyChar)) {
+			if (Console.KeyAvailable) {
 				List<char> bufferedChars = new List<char>();
 				bufferedChars.Add(keyInfo.KeyChar);
 
@@ -181,19 +181,24 @@ class Editor {
 		pastedData.Add(new List<char>());
 		pastedDataLine = 0;
 
-		foreach (char c in chars) {
-			if (c == '\n' || c == '\r') {
-				if (!(c == '\r' && chars.IndexOf(c) + 1 < chars.Count && chars[chars.IndexOf(c) + 1] == '\n')) {
-					pastedData.Add(new List<char>());
-					pastedDataLine++;
-				}
+		for (int i = 0; i < chars.Count; i++) {
+			char c = chars[i];
+
+			if (c == '\r') {
+				if (i + 1 < chars.Count && chars[i + 1] == '\n') continue;
+				pastedData.Add(new List<char>());
+				pastedDataLine++;
 			}
-			else if (!char.IsControl(c)) {
+			else if (c == '\n') {
+				pastedData.Add(new List<char>());
+				pastedDataLine++;
+			}
+			else {
 				pastedData[pastedDataLine].Add(c);
 			}
 		}
 
-		if (pastedData[pastedData.Count - 1].Count == 0) {
+		if (pastedData.Count > 0 && pastedData[pastedData.Count - 1].Count == 0) {
 			pastedData.RemoveAt(pastedData.Count - 1);
 		}
 
@@ -201,4 +206,5 @@ class Editor {
 		render.resetView();
 		render.printScreen();
 	}
+
 }

@@ -11,8 +11,8 @@ class Buffer {
 
 	public bool isSelecting;
 	public int line = 0;
-	public int coloumn = 0;
-	public int prefColoum = 0;
+	public int column = 0;
+	public int prefColumn = 0;
 
 	public Buffer() {
 		lines.Add(new List<char>());
@@ -20,12 +20,12 @@ class Buffer {
 
 	public void startSelecting() {
 		isSelecting = true;
-		startSelection = (line, coloumn);
+		startSelection = (line, column);
 	}
 
 	public void updateSelection() {
 		if (isSelecting) {
-			endSelection = (line, coloumn);
+			endSelection = (line, column);
 		}
 	}
 
@@ -35,45 +35,63 @@ class Buffer {
 		endSelection = (0, 0);
 	}
 
-
+	public List<List<char>> convertTabsToSpace(List<List<char>> linesWithTab) {
+		List<List<char>> linesWithSpaces = new List<List<char>>();
+		foreach (List<char> lineWithTab in linesWithTab) {
+			linesWithSpaces.Add(new List<char>());
+			foreach (char c in lineWithTab) {
+				if (c == '\t') {
+					linesWithSpaces[linesWithSpaces.Count - 1].AddRange("    ".ToCharArray());
+				}
+				else {
+					linesWithSpaces[linesWithSpaces.Count - 1].Add(c);
+				}
+			}
+		}
+		return linesWithSpaces;
+	}
 	public void pasteData(List<List<char>> pasteDataLines) {
 		if (isSelecting) {
-
+			// TODO: Implement paste with selection (delete selection first)
 		}
 		else {
 			insertLinesAtCursor(pasteDataLines);
 		}
 	}
 
-	public void insertLinesAtCursor(List<List<char>> linesToInsert) {
-		if (linesToInsert.Count == 0) return;
+	public void insertLinesAtCursor(List<List<char>> linesToInsertWithTab) {
+		if (linesToInsertWithTab.Count == 0) return;
+		var linesToInsert = convertTabsToSpace(linesToInsertWithTab);
+		int originalColumn = column;
 
-		List<char> remainingLine = lines[line].Slice(coloumn, lines[line].Count - coloumn);
-		lines[line].RemoveRange(coloumn, lines[line].Count - coloumn);
-		lines[line].InsertRange(coloumn, linesToInsert[0]);
-		int firstLineLenght = linesToInsert[0].Count;
-		linesToInsert.RemoveAt(0);
-		int i = line;
-		int j = 0;
-		if (linesToInsert.Count != 0) {
-			i++;
-			foreach (List<char> linetoInsert in linesToInsert) {
-				lines.Insert(i, linetoInsert);
-				j++;
-				if (j < linesToInsert.Count) {
-					i++;
-				}
+		List<char> remainingLine = lines[line].Slice(column, lines[line].Count - column);
+		lines[line].RemoveRange(column, lines[line].Count - column);
+
+		lines[line].InsertRange(column, linesToInsert[0]);
+		int firstLineLength = linesToInsert[0].Count;
+
+		int insertCount = linesToInsert.Count - 1;
+		int currentLine = line;
+
+		if (insertCount > 0) {
+			currentLine++;
+			for (int i = 1; i < linesToInsert.Count; i++) {
+				lines.Insert(currentLine, new List<char>(linesToInsert[i]));
+				currentLine++;
 			}
+			currentLine--;
 		}
-		lines[i].AddRange(remainingLine);
-		line = i;
-		if (linesToInsert.Count - 1 < 0) {
-			coloumn = firstLineLenght + coloumn;
+
+		lines[currentLine].AddRange(remainingLine);
+
+		line = currentLine;
+		if (insertCount == 0) {
+			column = originalColumn + firstLineLength;
 		}
 		else {
-			coloumn = linesToInsert[linesToInsert.Count - 1].Count;
+			column = linesToInsert[linesToInsert.Count - 1].Count;
 		}
-		prefColoum = coloumn;
+		prefColumn = column;
 	}
 
 	public async Task copyLines() {
@@ -148,32 +166,24 @@ class Buffer {
 	}
 
 	public bool isItTab() {
-		int toDeleteSpaces = 0;
+		if (column < 4) return false;
 
-		for (int i = coloumn - 1; i >= 0; i--) {
-			if (char.IsWhiteSpace(lines[line][i])) {
-				toDeleteSpaces++;
-				if (toDeleteSpaces == 4) {
-					return true;
-				}
-			}
-			else {
+		for (int i = column - 1; i >= column - 4; i--) {
+			if (i < 0 || !char.IsWhiteSpace(lines[line][i])) {
 				return false;
 			}
 		}
-
-		return false;
-
+		return true;
 	}
 
 
 	public void newLine() {
-		List<char> newLine = lines[line].Slice(coloumn, lines[line].Count - coloumn);
-		lines[line].RemoveRange(coloumn, lines[line].Count - coloumn);
+		List<char> newLine = lines[line].Slice(column, lines[line].Count - column);
+		lines[line].RemoveRange(column, lines[line].Count - column);
 		int leadingWhiteSpaces = getPrevWhiteSpaces();
 		line++;
-		coloumn = leadingWhiteSpaces;
-		prefColoum = leadingWhiteSpaces;
+		column = leadingWhiteSpaces;
+		prefColumn = leadingWhiteSpaces;
 		lines.Insert(line, [.. new string(' ', leadingWhiteSpaces).ToCharArray()]);
 		lines[line].AddRange(newLine);
 	}
@@ -183,13 +193,12 @@ class Buffer {
 			return;
 		}
 		line--;
-		if (prefColoum <= lines[line].Count) {
-			coloumn = prefColoum;
+		if (prefColumn <= lines[line].Count) {
+			column = prefColumn;
 		}
-		else if (prefColoum > lines[line].Count) {
-			coloumn = lines[line].Count;
+		else if (prefColumn > lines[line].Count) {
+			column = lines[line].Count;
 		}
-
 	}
 
 	public void moveDown() {
@@ -197,60 +206,56 @@ class Buffer {
 			return;
 		}
 		line++;
-		if (prefColoum <= lines[line].Count) {
-			coloumn = prefColoum;
+		if (prefColumn <= lines[line].Count) {
+			column = prefColumn;
 		}
-		else if (prefColoum > lines[line].Count) {
-			coloumn = lines[line].Count;
+		else if (prefColumn > lines[line].Count) {
+			column = lines[line].Count;
 		}
-
 	}
 
 	public void moveRight() {
-		if (coloumn == lines[line].Count) {
+		if (column == lines[line].Count) {
 			if (lines.Count == (line + 1)) {
 				return;
 			}
 			line++;
-			coloumn = 0;
-			prefColoum = coloumn;
+			column = 0;
+			prefColumn = column;
 		}
 		else {
-			coloumn++;
-			prefColoum = coloumn;
+			column++;
+			prefColumn = column;
 		}
-
 	}
 
 	public void moveLeft() {
-		if (coloumn == 0) {
+		if (column == 0) {
 			if (line == 0) {
 				return;
 			}
 			line--;
-			coloumn = lines[line].Count;
-			prefColoum = coloumn;
+			column = lines[line].Count;
+			prefColumn = column;
 		}
 		else {
-			coloumn--;
-			prefColoum = coloumn;
+			column--;
+			prefColumn = column;
 		}
-
 	}
 
 	public bool backspace() {
-		if (coloumn > 0) {
+		if (column > 0) {
 			if (isItTab()) {
-				lines[line].RemoveAt(Math.Max(coloumn - 4, 0));
-				prefColoum -= 4;
-				coloumn = prefColoum;
+				lines[line].RemoveRange(column - 4, 4);
+				column -= 4;
+				prefColumn = column;
 			}
 			else {
-				lines[line].RemoveAt(Math.Max(coloumn - 1, 0));
-				prefColoum--;
-				coloumn = prefColoum;
+				lines[line].RemoveAt(column - 1);
+				column--;
+				prefColumn = column;
 			}
-
 			return false;
 		}
 		else {
@@ -265,12 +270,9 @@ class Buffer {
 				List<char> toAddLine = lines[line].Slice(0, oldLineCount);
 				lines.RemoveAt(line);
 				line--;
-				prefColoum = lines[line].Count;
-				coloumn = prefColoum;
-				foreach (char c in toAddLine) {
-					lines[line].Add(c);
-				}
-
+				column = lines[line].Count;
+				prefColumn = column;
+				lines[line].AddRange(toAddLine);
 				return true;
 			}
 
@@ -279,29 +281,26 @@ class Buffer {
 	}
 
 	public void clampCursor() {
-		if (coloumn < 0) {
-			coloumn = 0;
+		if (column < 0) {
+			column = 0;
 		}
-		if (coloumn > lines[line].Count) {
-			coloumn = lines[line].Count;
+		if (column > lines[line].Count) {
+			column = lines[line].Count;
 		}
-		prefColoum = coloumn;
+		prefColumn = column;
 	}
 
 	public void insertChar(char c) {
 		clampCursor();
-		lines[line].Insert(coloumn, c);
-		prefColoum++;
-		coloumn = prefColoum;
-
+		lines[line].Insert(column, c);
+		column++;
+		prefColumn = column;
 	}
 
 	public void insertTab(int count) {
 		clampCursor();
-		lines[line].InsertRange(coloumn, new string(' ', count));
-		prefColoum += count;
-		coloumn = prefColoum;
+		lines[line].InsertRange(column, new string(' ', count));
+		column += count;
+		prefColumn = column;
 	}
-
 }
-

@@ -63,7 +63,7 @@ class Render {
 	}
 
 	public int getCursorXPos(int lineInd) {
-		return lineInd.ToString().Length + buffer.coloumn + getSpacesNeeded(lineInd);
+		return lineInd.ToString().Length + buffer.column + getSpacesNeeded(lineInd);
 	}
 
 	public (int startLine, int endLine, int startColumn, int endColumn) getSelectedArea() {
