@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics;
 using System.Security.AccessControl;
 using System.Threading.Tasks.Dataflow;
@@ -10,13 +11,16 @@ class Render {
 
 	int currentDistFromEdge;
 
+	private int ContentHeight => Console.WindowHeight - 2;
+	private int StatusBarLine => Console.WindowHeight - 1;
+
 	public Render(Buffer buffer) {
 		this.buffer = buffer;
 		currentDistFromEdge = 4;
 	}
 
 	public void resetView() {
-		int h = Console.WindowHeight - 1;
+		int h = ContentHeight;
 
 		int margin = Math.Min(5, h / 3);
 
@@ -146,8 +150,8 @@ class Render {
 		for (int i = startLineInd; i < bottomLine; i++) {
 			printLine(i);
 		}
-		if (bottomLine < Console.WindowHeight - 1) {
-			for (int i = bottomLine; i < Console.WindowHeight - 1; i++) {
+		if (bottomLine < ContentHeight) {
+			for (int i = bottomLine; i < ContentHeight; i++) {
 				Console.SetCursorPosition(0, getScreenLine(i));
 				Console.Write("\x1b[K");
 			}
@@ -157,6 +161,40 @@ class Render {
 
 	public void printScreen() {
 		printSection(topLine);
+	}
+
+
+	public void drawStatusBar((string filePath, FileData fileData, int column, int line) statusBar) {
+		Console.CursorVisible = false;
+
+		Console.SetCursorPosition(0, StatusBarLine);
+		Console.BackgroundColor = ConsoleColor.DarkGray;
+		Console.ForegroundColor = ConsoleColor.White;
+		Console.Write(new string(' ', Console.WindowWidth));
+
+		Console.SetCursorPosition(0, StatusBarLine);
+		Console.BackgroundColor = ConsoleColor.DarkBlue;
+		Console.ForegroundColor = ConsoleColor.White;
+		string filePath = $" {statusBar.filePath} ";
+		Console.Write(filePath);
+
+		Console.BackgroundColor = ConsoleColor.DarkGreen;
+		Console.ForegroundColor = ConsoleColor.White;
+		int middleStart = Console.WindowWidth / 2 - 15;
+		Console.SetCursorPosition(middleStart, StatusBarLine);
+		string fileInfo = $" {statusBar.fileData.Extension}  {statusBar.fileData.Encoding}  {statusBar.fileData.FileSize} ";
+		Console.Write(fileInfo);
+
+		Console.BackgroundColor = ConsoleColor.DarkMagenta;
+		Console.ForegroundColor = ConsoleColor.White;
+		string lineColumn = $" Ln {statusBar.line}, Col {statusBar.column} ";
+		Console.SetCursorPosition(Console.WindowWidth - lineColumn.Length, StatusBarLine);
+		Console.Write(lineColumn);
+
+		Console.BackgroundColor = ConsoleColor.Black;
+		Console.ForegroundColor = ConsoleColor.White;
+		setCursor(buffer.line);
+		Console.CursorVisible = true;
 	}
 
 

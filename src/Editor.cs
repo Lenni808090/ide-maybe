@@ -2,16 +2,20 @@ class Editor {
 
 	Buffer buffer;
 	Render render;
+
+	StatusBar statusBar;
 	FileExplorer fileExplorer;
 
 	List<List<char>> pastedData;
 	int pastedDataLine = 0;
 
+	(string filePath, FileData fileData, int column, int line) prevStatusBar = default;
 	public Editor() {
 		buffer = new Buffer();
 		render = new Render(buffer);
 		fileExplorer = new FileExplorer();
 		pastedData = new List<List<char>>();
+		statusBar = new StatusBar(buffer, fileExplorer);
 
 		Console.CancelKeyPress += async (s, e) => {
 			e.Cancel = true;
@@ -29,6 +33,8 @@ class Editor {
 
 		render.resetView();
 		render.printScreen();
+		render.drawStatusBar(statusBar.UpdateStatusBar());
+		startResizeWatcher();
 
 		while (true) {
 			ConsoleKeyInfo keyInfo = Console.ReadKey(intercept: true);
@@ -173,6 +179,18 @@ class Editor {
 				buffer.insertTab(4);
 				render.printLine(buffer.line);
 			}
+
+			var updatedStatusBar = statusBar.UpdateStatusBar();
+
+			if (prevStatusBar == default) {
+				render.drawStatusBar(updatedStatusBar);
+				prevStatusBar = updatedStatusBar;
+			}
+			else if (prevStatusBar != updatedStatusBar) {
+				render.drawStatusBar(updatedStatusBar);
+				prevStatusBar = updatedStatusBar;
+			}
+
 		}
 	}
 
@@ -207,4 +225,24 @@ class Editor {
 		render.printScreen();
 	}
 
+	private void startResizeWatcher() {
+		Task.Run(async () => {
+			int prevHeight = Console.WindowHeight;
+			int prevWidth = Console.WindowWidth;
+
+			while (true) {
+				if (Console.WindowHeight != prevHeight || Console.WindowWidth != prevWidth) {
+					Console.Clear();
+					render.resetView();
+					render.printScreen();
+					render.drawStatusBar(statusBar.UpdateStatusBar());
+					prevHeight = Console.WindowHeight;
+					prevWidth = Console.WindowWidth;
+
+				}
+
+				await Task.Delay(50);
+			}
+		});
+	}
 }

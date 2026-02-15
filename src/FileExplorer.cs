@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 class FileExplorer {
+	public string cuurentFilePath = "";
+
 
 	public List<List<char>> readFile(string filePath) {
 		string[] lines = File.ReadAllLines(filePath);
@@ -12,6 +14,7 @@ class FileExplorer {
 		if (readFile.Count == 0) {
 			readFile.Add(new List<char>());
 		}
+		cuurentFilePath = filePath;
 		return readFile;
 	}
 }
