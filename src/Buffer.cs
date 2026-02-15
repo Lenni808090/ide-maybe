@@ -52,11 +52,15 @@ class Buffer {
 	}
 	public void pasteData(List<List<char>> pasteDataLines) {
 		if (isSelecting) {
-			// TODO: Implement paste with selection (delete selection first)
+			insertAtSelectedArea(pasteDataLines);
 		}
 		else {
 			insertLinesAtCursor(pasteDataLines);
 		}
+	}
+
+	public void insertAtSelectedArea(List<List<char>> linesToInsertWithTab) {
+		var (startLineSelect, endLineSelect, startColumnSelect, endColumnSelect) = getSelectedArea();
 	}
 
 	public void insertLinesAtCursor(List<List<char>> linesToInsertWithTab) {
@@ -94,27 +98,34 @@ class Buffer {
 		prefColumn = column;
 	}
 
+	public (int startLine, int endLine, int startColumn, int endColumn) getSelectedArea() {
+		int startLine = Math.Min(startSelection.startLine, endSelection.endLine);
+		int endLine = Math.Max(startSelection.startLine, endSelection.endLine);
+
+		int startColumn;
+		int endColumn;
+
+		if (startSelection.startLine == endSelection.endLine) {
+			startColumn = Math.Min(startSelection.startColumn, endSelection.endColumn);
+			endColumn = Math.Max(startSelection.startColumn, endSelection.endColumn);
+		}
+		else if (startLine == startSelection.startLine) {
+			startColumn = startSelection.startColumn;
+			endColumn = endSelection.endColumn;
+		}
+		else {
+			startColumn = endSelection.endColumn;
+			endColumn = startSelection.startColumn;
+		}
+
+		return (startLine, endLine, startColumn, endColumn);
+	}
+
 	public async Task copyLines() {
 		if (isSelecting) {
 			List<List<char>> copiedLines = new List<List<char>>();
-			int startLineCopy = Math.Min(startSelection.startLine, endSelection.endLine);
-			int endLineCopy = Math.Max(startSelection.startLine, endSelection.endLine);
 
-			int startColumnCopy;
-			int endColumnCopy;
-
-			if (startSelection.startLine == endSelection.endLine) {
-				startColumnCopy = Math.Min(startSelection.startColumn, endSelection.endColumn);
-				endColumnCopy = Math.Max(startSelection.startColumn, endSelection.endColumn);
-			}
-			else if (startSelection.startLine == startLineCopy) {
-				startColumnCopy = startSelection.startColumn;
-				endColumnCopy = endSelection.endColumn;
-			}
-			else {
-				startColumnCopy = endSelection.endColumn;
-				endColumnCopy = startSelection.startColumn;
-			}
+			var (startLineCopy, endLineCopy, startColumnCopy, endColumnCopy) = getSelectedArea();
 
 			for (int i = startLineCopy; i <= endLineCopy; i++) {
 				if (i == startLineCopy) {
@@ -135,6 +146,7 @@ class Buffer {
 					copiedLines.Add(new List<char>(lines[i]));
 				}
 			}
+
 			string copiedLinesString = "";
 
 			foreach (List<char> line in copiedLines) {
@@ -150,6 +162,7 @@ class Buffer {
 			await ClipboardService.SetTextAsync(copiedLinesString);
 		}
 	}
+
 
 	public int getPrevWhiteSpaces() {
 		int whiteSpaceCount = 0;
