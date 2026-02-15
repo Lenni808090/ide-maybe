@@ -110,7 +110,12 @@ class Render {
 
 			foreach (char c in lineToPrint) {
 				if (selectedArea.startLine == lineInd && selectedArea.startColumn == i) {
-					Console.BackgroundColor = ConsoleColor.Cyan;
+					if (i == selectedArea.endColumn) {
+						Console.BackgroundColor = ConsoleColor.Black;
+					}
+					else {
+						Console.BackgroundColor = ConsoleColor.Cyan;
+					}
 				}
 				else if (selectedArea.endLine == lineInd) {
 					if (i < selectedArea.endColumn && selectedArea.endLine != selectedArea.startLine) {
@@ -143,7 +148,7 @@ class Render {
 		}
 		if (bottomLine < Console.WindowHeight - 1) {
 			for (int i = bottomLine; i < Console.WindowHeight - 1; i++) {
-				Console.SetCursorPosition(0, getScreenLine(bottomLine));
+				Console.SetCursorPosition(0, getScreenLine(i));
 				Console.Write("\x1b[K");
 			}
 		}

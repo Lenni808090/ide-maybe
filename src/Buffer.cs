@@ -53,14 +53,41 @@ class Buffer {
 	public void pasteData(List<List<char>> pasteDataLines) {
 		if (isSelecting) {
 			insertAtSelectedArea(pasteDataLines);
+			stopSelecting();
 		}
 		else {
 			insertLinesAtCursor(pasteDataLines);
 		}
 	}
 
-	public void insertAtSelectedArea(List<List<char>> linesToInsertWithTab) {
+	public void removeSelectedArea() {
 		var (startLineSelect, endLineSelect, startColumnSelect, endColumnSelect) = getSelectedArea();
+		int firstLineRemovalCount;
+		if (startLineSelect == endLineSelect) {
+			firstLineRemovalCount = endColumnSelect - startColumnSelect;
+		}
+		else {
+			firstLineRemovalCount = lines[startLineSelect].Count - startColumnSelect;
+		}
+		lines[startLineSelect].RemoveRange(startColumnSelect, firstLineRemovalCount);
+
+		if (startLineSelect == endLineSelect) return;
+
+		var toBeMerged = lines[endLineSelect].GetRange(endColumnSelect, lines[endLineSelect].Count - endColumnSelect);
+		//beggining from behind because of shifting indeces
+		for (int i = endLineSelect; i > startLineSelect; i--) {
+			lines.RemoveAt(i);
+		}
+		lines[startLineSelect].AddRange(toBeMerged);
+		line = startLineSelect;
+		column = startColumnSelect;
+		prefColumn = column;
+		clampCursor();
+	}
+
+	public void insertAtSelectedArea(List<List<char>> linesToInsertWithTab) {
+		removeSelectedArea();
+		insertLinesAtCursor(linesToInsertWithTab);
 	}
 
 	public void insertLinesAtCursor(List<List<char>> linesToInsertWithTab) {
@@ -258,6 +285,11 @@ class Buffer {
 	}
 
 	public bool backspace() {
+		if (isSelecting) {
+			removeSelectedArea();
+			stopSelecting();
+			return true;
+		}
 		if (column > 0) {
 			if (isItTab()) {
 				lines[line].RemoveRange(column - 4, 4);
