@@ -193,6 +193,12 @@ class Buffer {
 		}
 	}
 
+	public async Task cutLines() {
+		await copyLines();
+		removeSelectedArea();
+		stopSelecting();
+	}
+
 
 	public int getPrevWhiteSpaces() {
 		int whiteSpaceCount = 0;

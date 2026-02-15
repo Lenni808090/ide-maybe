@@ -175,6 +175,12 @@ class Editor {
 				if (keyInfo.Key == ConsoleKey.C) {
 					await buffer.copyLines();
 				}
+
+				if (keyInfo.Key == ConsoleKey.X) {
+					await buffer.cutLines();
+					render.resetView();
+					render.printScreen();
+				}
 			}
 			else if (keyInfo.Key == ConsoleKey.Tab) {
 				buffer.insertTab(4);
