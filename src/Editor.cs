@@ -168,7 +168,8 @@ class Editor {
 			}
 			else if (!char.IsControl(keyInfo.KeyChar)) {
 				buffer.insertChar(keyInfo.KeyChar);
-				render.printLine(buffer.line);
+				render.resetView();
+				render.printScreen();
 			}
 			else if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)) {
 				if (keyInfo.Key == ConsoleKey.C) {

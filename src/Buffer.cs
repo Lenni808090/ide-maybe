@@ -71,7 +71,10 @@ class Buffer {
 		}
 		lines[startLineSelect].RemoveRange(startColumnSelect, firstLineRemovalCount);
 
-		if (startLineSelect == endLineSelect) return;
+		if (startLineSelect == endLineSelect) {
+			clampCursor();
+			return;
+		}
 
 		var toBeMerged = lines[endLineSelect].GetRange(endColumnSelect, lines[endLineSelect].Count - endColumnSelect);
 		//beggining from behind because of shifting indeces
@@ -336,7 +339,10 @@ class Buffer {
 	}
 
 	public void insertChar(char c) {
-		clampCursor();
+		if (isSelecting) {
+			removeSelectedArea();
+			stopSelecting();
+		}
 		lines[line].Insert(column, c);
 		column++;
 		prefColumn = column;

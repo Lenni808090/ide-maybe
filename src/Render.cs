@@ -11,7 +11,7 @@ class Render {
 
 	int currentDistFromEdge;
 
-	private int ContentHeight => Console.WindowHeight - 2;
+	private int ContentHeight => Console.WindowHeight - 1;
 	private int StatusBarLine => Console.WindowHeight - 1;
 
 	public Render(Buffer buffer) {
