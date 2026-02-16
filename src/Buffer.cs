@@ -354,6 +354,15 @@ class Buffer {
 		prefColumn = column;
 	}
 
+	public void insertCharAtPos(char c, int pos) {
+		if (isSelecting) {
+			stopSelecting();
+		}
+		lines[line].Insert(pos, c);
+		column = pos;
+		prefColumn = column;
+	}
+
 	public void insertTab(int count) {
 		clampCursor();
 		lines[line].InsertRange(column, new string(' ', count));

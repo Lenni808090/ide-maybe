@@ -190,7 +190,7 @@ class Render {
 
 		Console.BackgroundColor = ConsoleColor.DarkMagenta;
 		Console.ForegroundColor = ConsoleColor.White;
-		string lineColumn = $" Ln {statusBar.line}, Col {statusBar.column} ";
+		string lineColumn = $" Ln {statusBar.line}/ Col {statusBar.column} ";
 		Console.SetCursorPosition(Console.WindowWidth - lineColumn.Length, StatusBarLine);
 		Console.Write(lineColumn);
 
