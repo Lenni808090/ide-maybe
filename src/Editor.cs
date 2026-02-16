@@ -78,9 +78,9 @@ class Editor {
 				render.printScreen();
 			}
 			else if (keyInfo.Key == ConsoleKey.Backspace) {
-				if (buffer.column == 0 && buffer.line == 0) continue;
+				if (buffer.column == 0 && buffer.line == 0 && !buffer.isSelecting) continue;
 				if (buffer.isSelecting) {
-
+					redoUndoHandler.addActionToUndo(new DeleteWhileSelecting(buffer));
 				}
 				else {
 					if (buffer.column == 0) {

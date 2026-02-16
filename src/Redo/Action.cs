@@ -1,3 +1,5 @@
+using Microsoft.VisualBasic;
+
 abstract class Action {
 
 	public abstract void Undo(Buffer buffer);
@@ -74,5 +76,47 @@ class DeleteLineAction : Action {
 
 	public override void Undo(Buffer buffer) {
 		buffer.newLineAtPos(linePos - 1, buffer.lines[linePos - 1].Count);
+	}
+}
+
+class DeleteWhileSelecting : Action {
+	(int startLine, int endLine, int startColumn, int endColumn) selectedArea;
+	List<List<char>> deletedData;
+	public DeleteWhileSelecting(Buffer buffer) {
+		selectedArea = buffer.getSelectedArea();
+		deletedData = new List<List<char>>();
+		getDeletedData(selectedArea, buffer);
+	}
+
+	public void getDeletedData((int startLine, int endLine, int startColumn, int endColumn) selectedArea, Buffer buffer) {
+		for (int i = selectedArea.startLine; i <= selectedArea.endLine; i++) {
+			if (i == selectedArea.startLine) {
+				List<char> firstCopiedLine = new List<char>();
+				if (selectedArea.startLine == selectedArea.endLine) {
+					firstCopiedLine = buffer.lines[selectedArea.startLine].GetRange(selectedArea.startColumn, selectedArea.endColumn - selectedArea.startColumn);
+				}
+				else {
+					firstCopiedLine = buffer.lines[selectedArea.startLine].GetRange(selectedArea.startColumn, buffer.lines[selectedArea.startLine].Count - selectedArea.startColumn);
+				}
+				deletedData.Add(firstCopiedLine);
+			}
+			else if (i == selectedArea.endLine) {
+				List<char> lastLineCopied = buffer.lines[selectedArea.endLine].GetRange(0, selectedArea.endColumn);
+				deletedData.Add(lastLineCopied);
+			}
+			else {
+				deletedData.Add(new List<char>(buffer.lines[i]));
+			}
+		}
+	}
+
+	public override void Redo(Buffer buffer) {
+		buffer.setSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
+		buffer.removeSelectedArea();
+	}
+
+	public override void Undo(Buffer buffer) {
+		buffer.insertLinesAtPos(selectedArea.startLine, selectedArea.startColumn, deletedData);
+		buffer.setSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
 	}
 }
