@@ -189,7 +189,12 @@ class Editor {
 				render.setCursor(buffer.line);
 			}
 			else if (!char.IsControl(keyInfo.KeyChar)) {
-				redoUndoHandler.addActionToUndo(new InsertCharAction(keyInfo.KeyChar, buffer.column, buffer.line));
+				if (buffer.isSelecting) {
+					redoUndoHandler.addActionToUndo(new InsertCharWhileSelecting(buffer, keyInfo.KeyChar, buffer.column, buffer.line));
+				}
+				else {
+					redoUndoHandler.addActionToUndo(new InsertCharAction(keyInfo.KeyChar, buffer.column, buffer.line));
+				}
 				buffer.insertChar(keyInfo.KeyChar);
 				render.resetView();
 				render.printScreen();
@@ -199,6 +204,7 @@ class Editor {
 					await buffer.copyLines();
 				}
 				else if (keyInfo.Key == ConsoleKey.X) {
+					redoUndoHandler.addActionToUndo(new DeleteWhileSelecting(buffer));
 					await buffer.cutLines();
 					render.resetView();
 					render.printScreen();
@@ -217,7 +223,6 @@ class Editor {
 					render.printScreen();
 				}
 			}
-
 			else if (keyInfo.Key == ConsoleKey.Tab) {
 				redoUndoHandler.addActionToUndo(new InsertTabAction(buffer.column, buffer.line));
 				buffer.insertTab(4);

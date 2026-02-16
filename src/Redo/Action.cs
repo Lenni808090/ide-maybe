@@ -113,24 +113,27 @@ class DeleteLineAction : Action {
 	}
 }
 
-class DeleteWhileSelecting : Action {
-	(int startLine, int endLine, int startColumn, int endColumn) selectedArea;
-	List<List<char>> deletedData;
-	public DeleteWhileSelecting(Buffer buffer) {
+abstract class SelectionAction : Action {
+	protected (int startLine, int endLine, int startColumn, int endColumn) selectedArea;
+	protected List<List<char>> deletedData;
+
+	protected SelectionAction(Buffer buffer) {
 		selectedArea = buffer.getSelectedArea();
 		deletedData = new List<List<char>>();
 		getDeletedData(selectedArea, buffer);
 	}
 
-	public void getDeletedData((int startLine, int endLine, int startColumn, int endColumn) selectedArea, Buffer buffer) {
+	protected void getDeletedData((int startLine, int endLine, int startColumn, int endColumn) selectedArea, Buffer buffer) {
 		for (int i = selectedArea.startLine; i <= selectedArea.endLine; i++) {
 			if (i == selectedArea.startLine) {
 				List<char> firstCopiedLine = new List<char>();
 				if (selectedArea.startLine == selectedArea.endLine) {
-					firstCopiedLine = buffer.lines[selectedArea.startLine].GetRange(selectedArea.startColumn, selectedArea.endColumn - selectedArea.startColumn);
+					firstCopiedLine = buffer.lines[selectedArea.startLine]
+						.GetRange(selectedArea.startColumn, selectedArea.endColumn - selectedArea.startColumn);
 				}
 				else {
-					firstCopiedLine = buffer.lines[selectedArea.startLine].GetRange(selectedArea.startColumn, buffer.lines[selectedArea.startLine].Count - selectedArea.startColumn);
+					firstCopiedLine = buffer.lines[selectedArea.startLine]
+						.GetRange(selectedArea.startColumn, buffer.lines[selectedArea.startLine].Count - selectedArea.startColumn);
 				}
 				deletedData.Add(firstCopiedLine);
 			}
@@ -143,10 +146,41 @@ class DeleteWhileSelecting : Action {
 			}
 		}
 	}
+}
+
+
+
+class DeleteWhileSelecting : SelectionAction {
+	public DeleteWhileSelecting(Buffer buffer) : base(buffer) { }
 
 	public override void Redo(Buffer buffer) {
 		buffer.setSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
 		buffer.removeSelectedArea();
+	}
+
+	public override void Undo(Buffer buffer) {
+		buffer.insertLinesAtPos(selectedArea.startLine, selectedArea.startColumn, deletedData);
+		buffer.setSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
+	}
+}
+
+
+
+class InsertCharWhileSelecting : SelectionAction {
+	char insertedChar;
+	int columnPos;
+	int linePos;
+
+	public InsertCharWhileSelecting(Buffer buffer, char insertedChar, int columnPos, int linePos) : base(buffer) {
+		this.insertedChar = insertedChar;
+		this.columnPos = columnPos;
+		this.linePos = linePos;
+	}
+
+	public override void Redo(Buffer buffer) {
+		buffer.setSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
+		buffer.removeSelectedArea();
+		buffer.insertCharAtPos(insertedChar, columnPos, linePos);
 	}
 
 	public override void Undo(Buffer buffer) {
