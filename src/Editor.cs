@@ -268,7 +268,12 @@ class Editor {
 		if (pastedData.Count > 0 && pastedData[pastedData.Count - 1].Count == 0) {
 			pastedData.RemoveAt(pastedData.Count - 1);
 		}
+		if (buffer.isSelecting) {
 
+		}
+		else {
+			redoUndoHandler.addActionToUndo(new PasteDataAction(pastedData, buffer.column, buffer.line, buffer));
+		}
 		buffer.pasteData(pastedData);
 		render.resetView();
 		render.printScreen();

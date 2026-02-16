@@ -190,3 +190,35 @@ class InsertCharWhileSelecting : SelectionAction {
 }
 
 
+class PasteDataAction : Action {
+	int columnPos;
+	int linePos;
+	(int startLine, int endLine, int startColumn, int endColumn) pastedArea;
+	List<List<char>> pastedData;
+
+	public PasteDataAction(List<List<char>> pastedData, int columnPos, int linePos, Buffer buffer) {
+		this.pastedData = pastedData;
+		this.columnPos = columnPos;
+		this.linePos = linePos;
+		getPastedArea(buffer);
+	}
+
+	public void getPastedArea(Buffer buffer) {
+		var pastedDataNoTab = buffer.convertTabsToSpace(pastedData);
+		pastedArea.startLine = linePos;
+		pastedArea.startColumn = columnPos;
+		pastedArea.endLine = linePos + pastedDataNoTab.Count - 1;
+		pastedArea.endColumn = pastedData[pastedDataNoTab.Count - 1].Count;
+	}
+
+	public override void Redo(Buffer buffer) {
+		buffer.insertLinesAtPos(linePos, columnPos, pastedData);
+	}
+
+	public override void Undo(Buffer buffer) {
+		buffer.setSelectedArea(pastedArea.startLine, pastedArea.endLine, pastedArea.startColumn, pastedArea.endColumn);
+		buffer.removeSelectedArea();
+		buffer.stopSelecting();
+	}
+}
+

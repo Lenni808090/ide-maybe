@@ -114,7 +114,7 @@ class Render {
 
 			foreach (char c in lineToPrint) {
 				if (selectedArea.startLine == lineInd && selectedArea.startColumn == i) {
-					if (i == selectedArea.endColumn) {
+					if (i == selectedArea.endColumn && selectedArea.startLine == selectedArea.endLine) {
 						Console.BackgroundColor = ConsoleColor.Black;
 					}
 					else {
@@ -166,33 +166,59 @@ class Render {
 		printSection(topLine);
 	}
 
+	private static string FitStatusSegment(string text, int maxLength) {
+		if (maxLength <= 0) return "";
+		if (text.Length <= maxLength) return text;
+		return text.Substring(0, maxLength);
+	}
 
 	public void drawStatusBar((string filePath, FileData fileData, int column, int line) statusBar) {
 		Console.CursorVisible = false;
+		int width = Console.WindowWidth;
+		if (width <= 0) {
+			Console.CursorVisible = true;
+			return;
+		}
 
 		Console.SetCursorPosition(0, StatusBarLine);
 		Console.BackgroundColor = ConsoleColor.DarkGray;
 		Console.ForegroundColor = ConsoleColor.White;
-		Console.Write(new string(' ', Console.WindowWidth));
+		Console.Write(new string(' ', width));
 
-		Console.SetCursorPosition(0, StatusBarLine);
-		Console.BackgroundColor = ConsoleColor.DarkBlue;
-		Console.ForegroundColor = ConsoleColor.White;
-		string filePath = $" {statusBar.filePath} ";
-		Console.Write(filePath);
+		string leftRaw = $" {statusBar.filePath} ";
+		string middleRaw = $" {statusBar.fileData.Extension}  {statusBar.fileData.Encoding}  {statusBar.fileData.FileSize} ";
+		string rightRaw = $" Ln {statusBar.line}/ Col {statusBar.column} ";
 
-		Console.BackgroundColor = ConsoleColor.DarkGreen;
-		Console.ForegroundColor = ConsoleColor.White;
-		int middleStart = Console.WindowWidth / 2 - 15;
-		Console.SetCursorPosition(middleStart, StatusBarLine);
-		string fileInfo = $" {statusBar.fileData.Extension}  {statusBar.fileData.Encoding}  {statusBar.fileData.FileSize} ";
-		Console.Write(fileInfo);
+		string rightText = FitStatusSegment(rightRaw, width);
+		int rightStart = width - rightText.Length;
 
-		Console.BackgroundColor = ConsoleColor.DarkMagenta;
-		Console.ForegroundColor = ConsoleColor.White;
-		string lineColumn = $" Ln {statusBar.line}/ Col {statusBar.column} ";
-		Console.SetCursorPosition(Console.WindowWidth - lineColumn.Length, StatusBarLine);
-		Console.Write(lineColumn);
+		string middleCandidate = FitStatusSegment(middleRaw, width);
+		int middleStart = Math.Max(0, (width - middleCandidate.Length) / 2);
+		int middleMaxLength = Math.Max(0, rightStart - middleStart);
+		string middleText = FitStatusSegment(middleCandidate, middleMaxLength);
+
+		string leftText = FitStatusSegment(leftRaw, middleStart);
+
+		if (leftText.Length > 0) {
+			Console.SetCursorPosition(0, StatusBarLine);
+			Console.BackgroundColor = ConsoleColor.DarkBlue;
+			Console.ForegroundColor = ConsoleColor.White;
+			Console.Write(leftText);
+		}
+
+		if (middleText.Length > 0) {
+			Console.SetCursorPosition(middleStart, StatusBarLine);
+			Console.BackgroundColor = ConsoleColor.DarkGreen;
+			Console.ForegroundColor = ConsoleColor.White;
+			Console.Write(middleText);
+		}
+
+		if (rightText.Length > 0) {
+			Console.SetCursorPosition(rightStart, StatusBarLine);
+			Console.BackgroundColor = ConsoleColor.DarkMagenta;
+			Console.ForegroundColor = ConsoleColor.White;
+			Console.Write(rightText);
+		}
 
 		Console.BackgroundColor = ConsoleColor.Black;
 		Console.ForegroundColor = ConsoleColor.White;
