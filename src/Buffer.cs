@@ -237,6 +237,34 @@ class Buffer {
 		lines[line].AddRange(newLine);
 	}
 
+	public void newLineAtPos(int linePos, int columnPos) {
+		List<char> newLine = lines[linePos].Slice(columnPos, lines[linePos].Count - columnPos);
+		lines[linePos].RemoveRange(columnPos, lines[linePos].Count - columnPos);
+		int leadingWhiteSpaces = getPrevWhiteSpaces();
+		line = linePos + 1;
+		column = leadingWhiteSpaces;
+		prefColumn = leadingWhiteSpaces;
+		lines.Insert(linePos + 1, [.. new string(' ', leadingWhiteSpaces).ToCharArray()]);
+		lines[linePos + 1].AddRange(newLine);
+	}
+
+	public void mergeLinesAtPos(int linePos) {
+		if (linePos < 0) {
+			return;
+		}
+
+		if (linePos >= 0 && linePos < lines.Count) {
+			int lineToBeMerged = linePos + 1;
+			int oldLineCount = lines[lineToBeMerged].Count;
+			List<char> toAddLine = lines[lineToBeMerged].Slice(0, oldLineCount);
+			lines.RemoveAt(lineToBeMerged);
+			line = linePos;
+			column = lines[linePos].Count;
+			prefColumn = column;
+			lines[linePos].AddRange(toAddLine);
+		}
+	}
+
 	public void moveUp() {
 		if (line == 0) {
 			return;

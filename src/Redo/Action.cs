@@ -43,3 +43,20 @@ class DeleteCharAction : Action {
 		buffer.insertCharAtPos(deletedChar, columnPos, linePos);
 	}
 }
+
+class NewLineAction : Action {
+	int linePos;
+	int columnPos;
+
+	public NewLineAction(int linePos, int columnPos) {
+		this.linePos = linePos;
+		this.columnPos = columnPos;
+	}
+	public override void Redo(Buffer buffer) {
+		buffer.newLineAtPos(linePos, columnPos);
+	}
+
+	public override void Undo(Buffer buffer) {
+		buffer.mergeLinesAtPos(linePos);
+	}
+}

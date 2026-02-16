@@ -70,12 +70,13 @@ class Editor {
 			}
 
 			if (keyInfo.Key == ConsoleKey.Enter) {
+				redoUndoHandler.addActionToUndo(new NewLineAction(buffer.line, buffer.column));
 				buffer.newLine();
 				render.resetView();
 				render.printScreen();
 			}
 			else if (keyInfo.Key == ConsoleKey.Backspace) {
-				if (buffer.column == 0) continue;
+				if (buffer.column == 0 && buffer.line == 0) continue;
 				if (buffer.isSelecting) {
 
 				}
