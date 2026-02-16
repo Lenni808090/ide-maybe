@@ -2,9 +2,9 @@ class Editor {
 
 	Buffer buffer;
 	Render render;
-
 	StatusBar statusBar;
 	FileExplorer fileExplorer;
+	RedoUndoHandler redoUndoHandler;
 
 	List<List<char>> pastedData;
 	int pastedDataLine = 0;
@@ -15,6 +15,7 @@ class Editor {
 		render = new Render(buffer);
 		fileExplorer = new FileExplorer();
 		pastedData = new List<List<char>>();
+		redoUndoHandler = new RedoUndoHandler(buffer);
 		statusBar = new StatusBar(buffer, fileExplorer);
 
 		Console.CancelKeyPress += async (s, e) => {
@@ -74,6 +75,13 @@ class Editor {
 				render.printScreen();
 			}
 			else if (keyInfo.Key == ConsoleKey.Backspace) {
+				if (buffer.column == 0) continue;
+				if (buffer.isSelecting) {
+
+				}
+				else {
+					redoUndoHandler.addActionToUndo(new DeleteCharAction(buffer.lines[buffer.line][buffer.column - 1], buffer.column, buffer.line));
+				}
 				bool fullRedraw = buffer.backspace();
 				if (fullRedraw) {
 					render.resetView();
@@ -168,6 +176,7 @@ class Editor {
 				render.setCursor(buffer.line);
 			}
 			else if (!char.IsControl(keyInfo.KeyChar)) {
+				redoUndoHandler.addActionToUndo(new InsertCharAction(keyInfo.KeyChar, buffer.column, buffer.line));
 				buffer.insertChar(keyInfo.KeyChar);
 				render.resetView();
 				render.printScreen();
@@ -183,6 +192,16 @@ class Editor {
 				}
 				else if (keyInfo.Key == ConsoleKey.A) {
 					fileExplorer.saveFile(fileExplorer.cuurentFilePath, buffer.lines);
+				}
+				else if (keyInfo.Key == ConsoleKey.Z) {
+					redoUndoHandler.undo();
+					render.resetView();
+					render.printScreen();
+				}
+				else if (keyInfo.Key == ConsoleKey.Y) {
+					redoUndoHandler.redo();
+					render.resetView();
+					render.printScreen();
 				}
 			}
 

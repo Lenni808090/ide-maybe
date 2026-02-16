@@ -354,13 +354,24 @@ class Buffer {
 		prefColumn = column;
 	}
 
-	public void insertCharAtPos(char c, int pos) {
+	public void insertCharAtPos(char c, int columPos, int linePos) {
 		if (isSelecting) {
 			stopSelecting();
 		}
-		lines[line].Insert(pos, c);
-		column = pos;
+		lines[linePos].Insert(Math.Min(columPos, lines[linePos].Count), c);
+		column = columPos + 1;
 		prefColumn = column;
+		clampCursor();
+	}
+
+	public void removeCharAtPos(int columPos, int linePos) {
+		if (isSelecting) {
+			stopSelecting();
+		}
+		lines[linePos].RemoveAt(Math.Min(columPos, lines[linePos].Count - 1));
+		column = columPos;
+		prefColumn = column;
+		clampCursor();
 	}
 
 	public void insertTab(int count) {
