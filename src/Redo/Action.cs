@@ -60,3 +60,19 @@ class NewLineAction : Action {
 		buffer.mergeLinesAtPos(linePos);
 	}
 }
+
+class DeleteLineAction : Action {
+	int linePos;
+
+	public DeleteLineAction(int linePos) {
+
+		this.linePos = linePos;
+	}
+	public override void Redo(Buffer buffer) {
+		buffer.mergeLinesAtPos(linePos - 1);
+	}
+
+	public override void Undo(Buffer buffer) {
+		buffer.newLineAtPos(linePos - 1, buffer.lines[linePos - 1].Count);
+	}
+}

@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 class Editor {
 
 	Buffer buffer;
@@ -81,7 +83,12 @@ class Editor {
 
 				}
 				else {
-					redoUndoHandler.addActionToUndo(new DeleteCharAction(buffer.lines[buffer.line][buffer.column - 1], buffer.column, buffer.line));
+					if (buffer.column == 0) {
+						redoUndoHandler.addActionToUndo(new DeleteLineAction(buffer.line));
+					}
+					else {
+						redoUndoHandler.addActionToUndo(new DeleteCharAction(buffer.lines[buffer.line][buffer.column - 1], buffer.column, buffer.line));
+					}
 				}
 				bool fullRedraw = buffer.backspace();
 				if (fullRedraw) {
