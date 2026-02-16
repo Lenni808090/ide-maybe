@@ -87,7 +87,12 @@ class Editor {
 						redoUndoHandler.addActionToUndo(new DeleteLineAction(buffer.line));
 					}
 					else {
-						redoUndoHandler.addActionToUndo(new DeleteCharAction(buffer.lines[buffer.line][buffer.column - 1], buffer.column, buffer.line));
+						if (buffer.isItTab()) {
+							redoUndoHandler.addActionToUndo(new DeleteTabAction(buffer.column, buffer.line));
+						}
+						else {
+							redoUndoHandler.addActionToUndo(new DeleteCharAction(buffer.lines[buffer.line][buffer.column - 1], buffer.column, buffer.line));
+						}
 					}
 				}
 				bool fullRedraw = buffer.backspace();
@@ -214,6 +219,7 @@ class Editor {
 			}
 
 			else if (keyInfo.Key == ConsoleKey.Tab) {
+				redoUndoHandler.addActionToUndo(new InsertTabAction(buffer.column, buffer.line));
 				buffer.insertTab(4);
 				render.printLine(buffer.line, false);
 			}

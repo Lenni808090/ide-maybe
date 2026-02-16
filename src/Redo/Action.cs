@@ -26,6 +26,23 @@ class InsertCharAction : Action {
 	}
 }
 
+class InsertTabAction : Action {
+	int columnPos;
+	int linePos;
+
+	public InsertTabAction(int columnPos, int linePos) {
+		this.columnPos = columnPos;
+		this.linePos = linePos;
+	}
+	public override void Redo(Buffer buffer) {
+		buffer.insertTabAtPos(columnPos, linePos, 4);
+	}
+
+	public override void Undo(Buffer buffer) {
+		buffer.removeTabAtPos(columnPos + 4, linePos);
+	}
+}
+
 class DeleteCharAction : Action {
 
 	char deletedChar;
@@ -43,6 +60,23 @@ class DeleteCharAction : Action {
 
 	public override void Undo(Buffer buffer) {
 		buffer.insertCharAtPos(deletedChar, columnPos, linePos);
+	}
+}
+
+class DeleteTabAction : Action {
+	int columnPos;
+	int linePos;
+
+	public DeleteTabAction(int columnPos, int linePos) {
+		this.columnPos = columnPos;
+		this.linePos = linePos;
+	}
+	public override void Redo(Buffer buffer) {
+		buffer.removeTabAtPos(columnPos, linePos);
+	}
+
+	public override void Undo(Buffer buffer) {
+		buffer.insertTabAtPos(columnPos - 4, linePos, 4);
 	}
 }
 
@@ -120,3 +154,5 @@ class DeleteWhileSelecting : Action {
 		buffer.setSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
 	}
 }
+
+

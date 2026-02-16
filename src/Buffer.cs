@@ -410,10 +410,30 @@ class Buffer {
 		clampCursor();
 	}
 
+	public void removeTabAtPos(int columPos, int linePos) {
+		if (isSelecting) {
+			stopSelecting();
+		}
+		lines[linePos].RemoveRange(columPos - 4, 4);
+		column = columPos - 4;
+		prefColumn = column;
+		clampCursor();
+	}
+	public void insertTabAtPos(int columPos, int linePos, int count) {
+		if (isSelecting) {
+			stopSelecting();
+		}
+		clampCursor();
+		lines[linePos].InsertRange(columPos, new string(' ', count));
+		column = columPos + count;
+		prefColumn = column;
+		clampCursor();
+	}
 	public void insertTab(int count) {
 		clampCursor();
 		lines[line].InsertRange(column, new string(' ', count));
 		column += count;
 		prefColumn = column;
+		clampCursor();
 	}
 }
