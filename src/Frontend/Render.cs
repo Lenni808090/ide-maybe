@@ -5,7 +5,7 @@ using System.Threading.Tasks.Dataflow;
 
 class Render {
 	Buffer buffer;
-
+	SimpleHighlighter simpleHighlighter;
 	public int topLine = 0;
 	public int bottomLine = 0;
 
@@ -16,7 +16,34 @@ class Render {
 
 	public Render(Buffer buffer) {
 		this.buffer = buffer;
+		simpleHighlighter = new SimpleHighlighter();
 		currentDistFromEdge = 4;
+	}
+
+
+	public ConsoleColor getColor(TokenKind tokenKind) {
+		switch (tokenKind) {
+
+			case TokenKind.Identifier:
+				return ConsoleColor.White;
+			case TokenKind.Keyword:
+				return ConsoleColor.Red;
+			case TokenKind.Number:
+				return ConsoleColor.DarkBlue;
+			case TokenKind.String:
+				return ConsoleColor.DarkYellow;
+			case TokenKind.Whitespace:
+				return ConsoleColor.White;
+			case TokenKind.Unknown:
+				return ConsoleColor.White;
+			case TokenKind.Operator:
+				return ConsoleColor.Red;
+			case TokenKind.Comment:
+				return ConsoleColor.Gray;
+			default:
+				return ConsoleColor.White;
+
+		}
 	}
 
 	public void resetView() {
@@ -98,7 +125,9 @@ class Render {
 		Console.CursorVisible = false;
 		printLineNumber(lineInd);
 		List<char> lineToPrint = buffer.lines[lineInd];
-
+		List<Token> tokensToPrint = simpleHighlighter.HighlightLine(lineToPrint);
+		int currentTokenInd = 0;
+		Token currentToken = tokensToPrint.Count == 0 ? new Token { Start = 0, Length = 0, tokenKind = TokenKind.Unknown } : tokensToPrint[currentTokenInd];
 		int i = 0;
 
 
@@ -129,15 +158,31 @@ class Render {
 						Console.BackgroundColor = ConsoleColor.Black;
 					}
 				}
-
+				Console.ForegroundColor = getColor(currentToken.tokenKind);
 				Console.Write(c);
 				i++;
+				if (i >= currentToken.Start + currentToken.Length) {
+					currentTokenInd++;
+					if (currentTokenInd < tokensToPrint.Count) {
+						currentToken = tokensToPrint[currentTokenInd];
+					}
+				}
+
 			}
 		}
 		else {
 			Console.BackgroundColor = ConsoleColor.Black;
 			foreach (char c in lineToPrint) {
+				Console.ForegroundColor = getColor(currentToken.tokenKind);
 				Console.Write(c);
+				i++;
+				if (i >= currentToken.Start + currentToken.Length) {
+					currentTokenInd++;
+					if (currentTokenInd < tokensToPrint.Count) {
+						currentToken = tokensToPrint[currentTokenInd];
+					}
+				}
+
 			}
 		}
 		Console.BackgroundColor = ConsoleColor.Black;
