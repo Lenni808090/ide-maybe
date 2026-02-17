@@ -61,7 +61,7 @@ class Editor {
 				}
 				else {
 					if (buffer.isSelecting) {
-						redoUndoHandler.addActionToUndo(new InsertCharWhileSelecting(buffer, keyInfo.KeyChar, buffer.column, buffer.line));
+						redoUndoHandler.addActionToUndo(new InsertCharWhileSelecting(buffer, keyInfo.KeyChar));
 					}
 					else {
 						redoUndoHandler.addActionToUndo(new InsertCharAction(keyInfo.KeyChar, buffer.column, buffer.line));
@@ -192,7 +192,7 @@ class Editor {
 			}
 			else if (!char.IsControl(keyInfo.KeyChar)) {
 				if (buffer.isSelecting) {
-					redoUndoHandler.addActionToUndo(new InsertCharWhileSelecting(buffer, keyInfo.KeyChar, buffer.column, buffer.line));
+					redoUndoHandler.addActionToUndo(new InsertCharWhileSelecting(buffer, keyInfo.KeyChar));
 				}
 				else {
 					redoUndoHandler.addActionToUndo(new InsertCharAction(keyInfo.KeyChar, buffer.column, buffer.line));
@@ -273,7 +273,7 @@ class Editor {
 			pastedData.RemoveAt(pastedData.Count - 1);
 		}
 		if (buffer.isSelecting) {
-			redoUndoHandler.addActionToUndo(new PasteDataWhileSelecting(pastedData, buffer.column, buffer.line, buffer));
+			redoUndoHandler.addActionToUndo(new PasteDataWhileSelecting(pastedData, buffer));
 		}
 		else {
 			redoUndoHandler.addActionToUndo(new PasteDataAction(pastedData, buffer.column, buffer.line, buffer));

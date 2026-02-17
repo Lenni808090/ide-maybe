@@ -173,10 +173,10 @@ class InsertCharWhileSelecting : SelectionAction {
 	int columnPos;
 	int linePos;
 
-	public InsertCharWhileSelecting(Buffer buffer, char insertedChar, int columnPos, int linePos) : base(buffer) {
+	public InsertCharWhileSelecting(Buffer buffer, char insertedChar) : base(buffer) {
 		this.insertedChar = insertedChar;
-		this.columnPos = columnPos;
-		this.linePos = linePos;
+		columnPos = buffer.getSelectedArea().startColumn;
+		linePos = buffer.getSelectedArea().startLine;
 	}
 
 	public override void Redo(Buffer buffer) {
@@ -199,11 +199,11 @@ class PasteDataWhileSelecting : SelectionAction {
 	int linePos;
 	(int startLine, int endLine, int startColumn, int endColumn) pastedArea;
 	List<List<char>> pastedData;
-	public PasteDataWhileSelecting(List<List<char>> pastedData, int columnPos, int linePos, Buffer buffer) : base(buffer) {
+	public PasteDataWhileSelecting(List<List<char>> pastedData, Buffer buffer) : base(buffer) {
 
 		this.pastedData = pastedData;
-		this.columnPos = columnPos;
-		this.linePos = linePos;
+		columnPos = buffer.getSelectedArea().startColumn;
+		linePos = buffer.getSelectedArea().startLine;
 		getPastedArea(buffer);
 	}
 

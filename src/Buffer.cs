@@ -397,11 +397,21 @@ class Buffer {
 	public void insertChar(char c) {
 		if (isSelecting) {
 			removeSelectedArea();
+			int charPos = getSelectedArea().startColumn;
+			int linePos = getSelectedArea().startLine;
 			stopSelecting();
+			lines[linePos].Insert(charPos, c);
+
+			column = charPos + 1;
+			prefColumn = column;
 		}
-		lines[line].Insert(column, c);
-		column++;
-		prefColumn = column;
+		else {
+			lines[line].Insert(column, c);
+
+			column++;
+			prefColumn = column;
+		}
+		clampCursor();
 	}
 
 	public void insertCharAtPos(char c, int columPos, int linePos) {
