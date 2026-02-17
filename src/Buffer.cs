@@ -208,9 +208,9 @@ class Buffer {
 	}
 
 
-	public int getPrevWhiteSpaces() {
+	public int getPrevWhiteSpaces(int linePos) {
 		int whiteSpaceCount = 0;
-		List<char> lastLine = lines[line];
+		List<char> lastLine = lines[linePos];
 		foreach (char c in lastLine) {
 			if (char.IsWhiteSpace(c)) {
 				whiteSpaceCount++;
@@ -221,6 +221,8 @@ class Buffer {
 		}
 		return whiteSpaceCount;
 	}
+
+
 
 	public bool isItTab() {
 		if (column < 4) return false;
@@ -237,7 +239,7 @@ class Buffer {
 	public void newLine() {
 		List<char> newLine = lines[line].Slice(column, lines[line].Count - column);
 		lines[line].RemoveRange(column, lines[line].Count - column);
-		int leadingWhiteSpaces = getPrevWhiteSpaces();
+		int leadingWhiteSpaces = getPrevWhiteSpaces(line);
 		line++;
 		column = leadingWhiteSpaces;
 		prefColumn = leadingWhiteSpaces;
@@ -248,7 +250,7 @@ class Buffer {
 	public void newLineAtPos(int linePos, int columnPos) {
 		List<char> newLine = lines[linePos].Slice(columnPos, lines[linePos].Count - columnPos);
 		lines[linePos].RemoveRange(columnPos, lines[linePos].Count - columnPos);
-		int leadingWhiteSpaces = getPrevWhiteSpaces();
+		int leadingWhiteSpaces = getPrevWhiteSpaces(linePos);
 		line = linePos + 1;
 		column = leadingWhiteSpaces;
 		prefColumn = leadingWhiteSpaces;
@@ -256,21 +258,33 @@ class Buffer {
 		lines[linePos + 1].AddRange(newLine);
 	}
 
-	public void mergeLinesAtPos(int linePos) {
+	public void newLineAtPosRaw(int linePos, int columnPos) {
+		List<char> newLine = lines[linePos].Slice(columnPos, lines[linePos].Count - columnPos);
+		lines[linePos].RemoveRange(columnPos, lines[linePos].Count - columnPos);
+		lines.Insert(linePos + 1, new List<char>(newLine));
+		line = linePos + 1;
+		column = 0;
+		prefColumn = 0;
+	}
+
+	public void mergeLinesAtPos(int linePos, int removeCharsFromNextLineStart = 0) {
 		if (linePos < 0) {
 			return;
 		}
 
-		if (linePos >= 0 && linePos < lines.Count) {
-			int lineToBeMerged = linePos + 1;
-			int oldLineCount = lines[lineToBeMerged].Count;
-			List<char> toAddLine = lines[lineToBeMerged].Slice(0, oldLineCount);
-			lines.RemoveAt(lineToBeMerged);
-			line = linePos;
-			column = lines[linePos].Count;
-			prefColumn = column;
-			lines[linePos].AddRange(toAddLine);
+		int lineToBeMerged = linePos + 1;
+		if (lineToBeMerged >= lines.Count) {
+			return;
 		}
+
+		int removeCount = Math.Max(0, Math.Min(removeCharsFromNextLineStart, lines[lineToBeMerged].Count));
+		int oldLineCount = lines[lineToBeMerged].Count;
+		List<char> toAddLine = lines[lineToBeMerged].Slice(removeCount, oldLineCount - removeCount);
+		lines.RemoveAt(lineToBeMerged);
+		line = linePos;
+		column = lines[linePos].Count;
+		prefColumn = column;
+		lines[linePos].AddRange(toAddLine);
 	}
 
 	public void moveUp() {

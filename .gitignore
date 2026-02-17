@@ -480,3 +480,7 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Local undo/redo test scaffolding
+tests/
+Properties/AssemblyInfo.cs

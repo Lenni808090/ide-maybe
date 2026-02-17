@@ -83,33 +83,35 @@ class DeleteTabAction : Action {
 class NewLineAction : Action {
 	int linePos;
 	int columnPos;
+	int insertedIndentCount;
 
-	public NewLineAction(int linePos, int columnPos) {
+	public NewLineAction(int linePos, int columnPos, Buffer buffer) {
 		this.linePos = linePos;
 		this.columnPos = columnPos;
+		insertedIndentCount = Math.Min(buffer.getPrevWhiteSpaces(linePos), columnPos);
 	}
 	public override void Redo(Buffer buffer) {
 		buffer.newLineAtPos(linePos, columnPos);
 	}
 
 	public override void Undo(Buffer buffer) {
-		buffer.mergeLinesAtPos(linePos);
+		buffer.mergeLinesAtPos(linePos, insertedIndentCount);
 	}
 }
 
 class DeleteLineAction : Action {
 	int linePos;
-
-	public DeleteLineAction(int linePos) {
-
+	int deletedIntoLineLength;
+	public DeleteLineAction(int linePos, Buffer buffer) {
 		this.linePos = linePos;
+		deletedIntoLineLength = buffer.lines[linePos - 1].Count;
 	}
 	public override void Redo(Buffer buffer) {
 		buffer.mergeLinesAtPos(linePos - 1);
 	}
 
 	public override void Undo(Buffer buffer) {
-		buffer.newLineAtPos(linePos - 1, buffer.lines[linePos - 1].Count);
+		buffer.newLineAtPosRaw(linePos - 1, deletedIntoLineLength);
 	}
 }
 
@@ -149,13 +151,13 @@ abstract class SelectionAction : Action {
 }
 
 
-
 class DeleteWhileSelecting : SelectionAction {
 	public DeleteWhileSelecting(Buffer buffer) : base(buffer) { }
 
 	public override void Redo(Buffer buffer) {
 		buffer.setSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
 		buffer.removeSelectedArea();
+		buffer.stopSelecting();
 	}
 
 	public override void Undo(Buffer buffer) {
@@ -180,10 +182,55 @@ class InsertCharWhileSelecting : SelectionAction {
 	public override void Redo(Buffer buffer) {
 		buffer.setSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
 		buffer.removeSelectedArea();
+		buffer.stopSelecting();
 		buffer.insertCharAtPos(insertedChar, columnPos, linePos);
 	}
 
 	public override void Undo(Buffer buffer) {
+		buffer.removeCharAtPos(columnPos, linePos);
+		buffer.insertLinesAtPos(selectedArea.startLine, selectedArea.startColumn, deletedData);
+		buffer.setSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
+	}
+}
+
+class PasteDataWhileSelecting : SelectionAction {
+
+	int columnPos;
+	int linePos;
+	(int startLine, int endLine, int startColumn, int endColumn) pastedArea;
+	List<List<char>> pastedData;
+	public PasteDataWhileSelecting(List<List<char>> pastedData, int columnPos, int linePos, Buffer buffer) : base(buffer) {
+
+		this.pastedData = pastedData;
+		this.columnPos = columnPos;
+		this.linePos = linePos;
+		getPastedArea(buffer);
+	}
+
+	public void getPastedArea(Buffer buffer) {
+		var pastedDataNoTab = buffer.convertTabsToSpace(pastedData);
+		pastedArea.startLine = linePos;
+		pastedArea.startColumn = columnPos;
+		pastedArea.endLine = linePos + pastedDataNoTab.Count - 1;
+		if (pastedArea.startLine == pastedArea.endLine) {
+			pastedArea.endColumn = pastedDataNoTab[pastedDataNoTab.Count - 1].Count + pastedArea.startColumn;
+		}
+		else {
+			pastedArea.endColumn = pastedDataNoTab[pastedDataNoTab.Count - 1].Count;
+		}
+	}
+
+	public override void Redo(Buffer buffer) {
+		buffer.setSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
+		buffer.removeSelectedArea();
+		buffer.stopSelecting();
+		buffer.insertLinesAtPos(linePos, columnPos, pastedData);
+	}
+
+	public override void Undo(Buffer buffer) {
+		buffer.setSelectedArea(pastedArea.startLine, pastedArea.endLine, pastedArea.startColumn, pastedArea.endColumn);
+		buffer.removeSelectedArea();
+		buffer.stopSelecting();
 		buffer.insertLinesAtPos(selectedArea.startLine, selectedArea.startColumn, deletedData);
 		buffer.setSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
 	}
@@ -208,7 +255,12 @@ class PasteDataAction : Action {
 		pastedArea.startLine = linePos;
 		pastedArea.startColumn = columnPos;
 		pastedArea.endLine = linePos + pastedDataNoTab.Count - 1;
-		pastedArea.endColumn = pastedData[pastedDataNoTab.Count - 1].Count;
+		if (pastedArea.startLine == pastedArea.endLine) {
+			pastedArea.endColumn = pastedDataNoTab[pastedDataNoTab.Count - 1].Count + pastedArea.startColumn;
+		}
+		else {
+			pastedArea.endColumn = pastedDataNoTab[pastedDataNoTab.Count - 1].Count;
+		}
 	}
 
 	public override void Redo(Buffer buffer) {

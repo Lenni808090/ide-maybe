@@ -8,15 +8,11 @@ class Editor {
 	FileExplorer fileExplorer;
 	RedoUndoHandler redoUndoHandler;
 
-	List<List<char>> pastedData;
-	int pastedDataLine = 0;
-
 	(string filePath, FileData fileData, int column, int line) prevStatusBar = default;
 	public Editor() {
 		buffer = new Buffer();
 		render = new Render(buffer);
 		fileExplorer = new FileExplorer();
-		pastedData = new List<List<char>>();
 		redoUndoHandler = new RedoUndoHandler(buffer);
 		statusBar = new StatusBar(buffer, fileExplorer);
 
@@ -64,6 +60,12 @@ class Editor {
 					continue;
 				}
 				else {
+					if (buffer.isSelecting) {
+						redoUndoHandler.addActionToUndo(new InsertCharWhileSelecting(buffer, keyInfo.KeyChar, buffer.column, buffer.line));
+					}
+					else {
+						redoUndoHandler.addActionToUndo(new InsertCharAction(keyInfo.KeyChar, buffer.column, buffer.line));
+					}
 					buffer.insertChar(keyInfo.KeyChar);
 					render.resetView();
 					render.printScreen();
@@ -72,7 +74,7 @@ class Editor {
 			}
 
 			if (keyInfo.Key == ConsoleKey.Enter) {
-				redoUndoHandler.addActionToUndo(new NewLineAction(buffer.line, buffer.column));
+				redoUndoHandler.addActionToUndo(new NewLineAction(buffer.line, buffer.column, buffer));
 				buffer.newLine();
 				render.resetView();
 				render.printScreen();
@@ -84,14 +86,14 @@ class Editor {
 				}
 				else {
 					if (buffer.column == 0) {
-						redoUndoHandler.addActionToUndo(new DeleteLineAction(buffer.line));
+						redoUndoHandler.addActionToUndo(new DeleteLineAction(buffer.line, buffer));
 					}
 					else {
 						if (buffer.isItTab()) {
 							redoUndoHandler.addActionToUndo(new DeleteTabAction(buffer.column, buffer.line));
 						}
 						else {
-							redoUndoHandler.addActionToUndo(new DeleteCharAction(buffer.lines[buffer.line][buffer.column - 1], buffer.column, buffer.line));
+							redoUndoHandler.addActionToUndo(new DeleteCharAction(buffer.lines[buffer.line][buffer.column - 1], buffer.column - 1, buffer.line));
 						}
 					}
 				}
@@ -204,7 +206,9 @@ class Editor {
 					await buffer.copyLines();
 				}
 				else if (keyInfo.Key == ConsoleKey.X) {
-					redoUndoHandler.addActionToUndo(new DeleteWhileSelecting(buffer));
+					if (buffer.isSelecting) {
+						redoUndoHandler.addActionToUndo(new DeleteWhileSelecting(buffer));
+					}
 					await buffer.cutLines();
 					render.resetView();
 					render.printScreen();
@@ -244,9 +248,9 @@ class Editor {
 	}
 
 	private void handlePaste(List<char> chars) {
-		pastedData.Clear();
+		List<List<char>> pastedData = new List<List<char>>();
 		pastedData.Add(new List<char>());
-		pastedDataLine = 0;
+		int pastedDataLine = 0;
 
 		for (int i = 0; i < chars.Count; i++) {
 			char c = chars[i];
@@ -269,7 +273,7 @@ class Editor {
 			pastedData.RemoveAt(pastedData.Count - 1);
 		}
 		if (buffer.isSelecting) {
-
+			redoUndoHandler.addActionToUndo(new PasteDataWhileSelecting(pastedData, buffer.column, buffer.line, buffer));
 		}
 		else {
 			redoUndoHandler.addActionToUndo(new PasteDataAction(pastedData, buffer.column, buffer.line, buffer));
