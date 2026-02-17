@@ -181,9 +181,9 @@ class Render {
 		}
 
 		Console.SetCursorPosition(0, StatusBarLine);
-		Console.BackgroundColor = ConsoleColor.DarkGray;
+		Console.BackgroundColor = ConsoleColor.DarkBlue;
 		Console.ForegroundColor = ConsoleColor.White;
-		Console.Write(new string(' ', width));
+		Console.Write("\x1b[K");
 
 		string leftRaw = $" {statusBar.filePath} ";
 		string middleRaw = $" {statusBar.fileData.Extension}  {statusBar.fileData.Encoding}  {statusBar.fileData.FileSize} ";
@@ -192,8 +192,8 @@ class Render {
 		string rightText = FitStatusSegment(rightRaw, width);
 		int rightStart = width - rightText.Length;
 
-		string middleCandidate = FitStatusSegment(middleRaw, width);
-		int middleStart = Math.Max(0, (width - middleCandidate.Length) / 2);
+		string middleCandidate = FitStatusSegment(middleRaw, rightStart);
+		int middleStart = Math.Max(0, rightStart - middleCandidate.Length);
 		int middleMaxLength = Math.Max(0, rightStart - middleStart);
 		string middleText = FitStatusSegment(middleCandidate, middleMaxLength);
 
@@ -208,14 +208,14 @@ class Render {
 
 		if (middleText.Length > 0) {
 			Console.SetCursorPosition(middleStart, StatusBarLine);
-			Console.BackgroundColor = ConsoleColor.DarkGreen;
+			Console.BackgroundColor = ConsoleColor.Blue;
 			Console.ForegroundColor = ConsoleColor.White;
 			Console.Write(middleText);
 		}
 
 		if (rightText.Length > 0) {
 			Console.SetCursorPosition(rightStart, StatusBarLine);
-			Console.BackgroundColor = ConsoleColor.DarkMagenta;
+			Console.BackgroundColor = ConsoleColor.DarkCyan;
 			Console.ForegroundColor = ConsoleColor.White;
 			Console.Write(rightText);
 		}
