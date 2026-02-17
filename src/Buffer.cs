@@ -80,6 +80,7 @@ class Buffer {
 		lines[startLineSelect].RemoveRange(startColumnSelect, firstLineRemovalCount);
 
 		if (startLineSelect == endLineSelect) {
+			column = startColumnSelect;
 			clampCursor();
 			return;
 		}
