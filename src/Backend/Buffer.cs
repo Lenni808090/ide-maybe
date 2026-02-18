@@ -18,7 +18,12 @@ class Buffer {
 		lines.Add(new List<char>());
 	}
 
-
+	public Dictionary<char, char> pairs = new() {
+		{ '(', ')' },
+		{ '[', ']' },
+		{ '{', '}' },
+		{ '"', '"' },
+	};
 	public void setSelectedArea(int startLine, int endLine, int startColumn, int endColumn) {
 		startSelection.startLine = startLine;
 		startSelection.startColumn = startColumn;
@@ -415,10 +420,34 @@ class Buffer {
 		clampCursor();
 	}
 
-	public void insertCharAtPos(char c, int columPos, int linePos) {
+
+	public void insertCharPair(char c) {
+		char secoundC = pairs[c];
+
+
 		if (isSelecting) {
-			stopSelecting();
+			int firstCharColumnPos = getSelectedArea().startColumn;
+			int secoundCharColumnPos = getSelectedArea().endColumn;
+			int firstCharlinePos = getSelectedArea().startLine;
+			int secoundCharlinePos = getSelectedArea().endLine;
+
+			insertCharAtPos(c, firstCharColumnPos, firstCharlinePos);
+			insertCharAtPos(secoundC, secoundCharColumnPos + 1, secoundCharlinePos);
+
+			setSelectedArea(firstCharlinePos, secoundCharlinePos, firstCharColumnPos + 1, secoundCharColumnPos + 1);
+			line = firstCharlinePos;
+			column = firstCharColumnPos + 1;
+			prefColumn = column;
 		}
+		else {
+			lines[line].Insert(column, c);
+			lines[line].Insert(column + 1, secoundC);
+			column++;
+			prefColumn = column;
+		}
+		clampCursor();
+	}
+	public void insertCharAtPos(char c, int columPos, int linePos) {
 		lines[linePos].Insert(Math.Min(columPos, lines[linePos].Count), c);
 		column = columPos + 1;
 		prefColumn = column;
@@ -426,9 +455,6 @@ class Buffer {
 	}
 
 	public void removeCharAtPos(int columPos, int linePos) {
-		if (isSelecting) {
-			stopSelecting();
-		}
 		lines[linePos].RemoveAt(Math.Min(columPos, lines[linePos].Count - 1));
 		column = columPos;
 		prefColumn = column;
@@ -436,18 +462,12 @@ class Buffer {
 	}
 
 	public void removeTabAtPos(int columPos, int linePos) {
-		if (isSelecting) {
-			stopSelecting();
-		}
 		lines[linePos].RemoveRange(columPos - 4, 4);
 		column = columPos - 4;
 		prefColumn = column;
 		clampCursor();
 	}
 	public void insertTabAtPos(int columPos, int linePos, int count) {
-		if (isSelecting) {
-			stopSelecting();
-		}
 		clampCursor();
 		lines[linePos].InsertRange(columPos, new string(' ', count));
 		column = columPos + count;

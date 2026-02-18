@@ -191,15 +191,23 @@ class Editor {
 				render.setCursor(buffer.line);
 			}
 			else if (!char.IsControl(keyInfo.KeyChar)) {
-				if (buffer.isSelecting) {
-					redoUndoHandler.addActionToUndo(new InsertCharWhileSelecting(buffer, keyInfo.KeyChar));
+				if (buffer.pairs.ContainsKey(keyInfo.KeyChar)) {
+					buffer.insertCharPair(keyInfo.KeyChar);
+
+					render.resetView();
+					render.printScreen();
 				}
 				else {
-					redoUndoHandler.addActionToUndo(new InsertCharAction(keyInfo.KeyChar, buffer.column, buffer.line));
+					if (buffer.isSelecting) {
+						redoUndoHandler.addActionToUndo(new InsertCharWhileSelecting(buffer, keyInfo.KeyChar));
+					}
+					else {
+						redoUndoHandler.addActionToUndo(new InsertCharAction(keyInfo.KeyChar, buffer.column, buffer.line));
+					}
+					buffer.insertChar(keyInfo.KeyChar);
+					render.resetView();
+					render.printScreen();
 				}
-				buffer.insertChar(keyInfo.KeyChar);
-				render.resetView();
-				render.printScreen();
 			}
 			else if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)) {
 				if (keyInfo.Key == ConsoleKey.C) {
