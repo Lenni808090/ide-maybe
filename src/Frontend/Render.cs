@@ -5,6 +5,8 @@ using System.Threading.Tasks.Dataflow;
 
 class Render {
 	Buffer buffer;
+
+	StatusBar statusBar;
 	SimpleHighlighter simpleHighlighter;
 	Searcher searcher;
 	Converter converter;
@@ -16,9 +18,10 @@ class Render {
 	private int ContentHeight => Console.WindowHeight - 1;
 	private int StatusBarLine => Console.WindowHeight - 1;
 
-	public Render(Buffer buffer, Searcher searcher) {
+	public Render(Buffer buffer, Searcher searcher, StatusBar statusBar) {
 		this.buffer = buffer;
 		this.searcher = searcher;
+		this.statusBar = statusBar;
 		simpleHighlighter = new SimpleHighlighter();
 		converter = new();
 		currentDistFromEdge = 4;
@@ -193,55 +196,44 @@ class Render {
 		printSection(topLine);
 	}
 
-	private static string FitStatusSegment(string text, int maxLength) {
+	private static string fitStatusSegment(string text, int maxLength) {
 		if (maxLength <= 0) return "";
 		if (text.Length <= maxLength) return text;
 		return text.Substring(0, maxLength);
 	}
 
-	public void drawStatusBar((string filePath, FileData fileData, int column, int line) statusBar) {
-		Console.CursorVisible = false;
+	private void drawStatusBarSegments(
+		string leftText,
+		string middleText,
+		string rightText,
+		int statusBarLine
+	) {
 		int width = Console.WindowWidth;
-		if (width <= 0) {
-			Console.CursorVisible = true;
-			return;
-		}
+		if (width <= 0) return;
 
-		Console.SetCursorPosition(0, StatusBarLine);
+		Console.SetCursorPosition(0, statusBarLine);
 		Console.BackgroundColor = ConsoleColor.DarkBlue;
 		Console.ForegroundColor = ConsoleColor.White;
 		Console.Write("\x1b[K");
 
-		string leftRaw = $" {statusBar.filePath} ";
-		string middleRaw = $" {statusBar.fileData.Extension}  {statusBar.fileData.Encoding}  {statusBar.fileData.FileSize} ";
-		string rightRaw = $" Ln {statusBar.line}/ Col {statusBar.column} ";
-
-		string rightText = FitStatusSegment(rightRaw, width);
-		int rightStart = width - rightText.Length;
-
-		string middleCandidate = FitStatusSegment(middleRaw, rightStart);
-		int middleStart = Math.Max(0, rightStart - middleCandidate.Length);
-		int middleMaxLength = Math.Max(0, rightStart - middleStart);
-		string middleText = FitStatusSegment(middleCandidate, middleMaxLength);
-
-		string leftText = FitStatusSegment(leftRaw, middleStart);
-
-		if (leftText.Length > 0) {
-			Console.SetCursorPosition(0, StatusBarLine);
+		if (!string.IsNullOrEmpty(leftText)) {
+			Console.SetCursorPosition(0, statusBarLine);
 			Console.BackgroundColor = ConsoleColor.DarkBlue;
 			Console.ForegroundColor = ConsoleColor.White;
 			Console.Write(leftText);
 		}
 
-		if (middleText.Length > 0) {
-			Console.SetCursorPosition(middleStart, StatusBarLine);
+		if (!string.IsNullOrEmpty(middleText)) {
+			int middleStart = Math.Max(0, (width - rightText.Length - middleText.Length));
+			Console.SetCursorPosition(middleStart, statusBarLine);
 			Console.BackgroundColor = ConsoleColor.Blue;
 			Console.ForegroundColor = ConsoleColor.White;
 			Console.Write(middleText);
 		}
 
-		if (rightText.Length > 0) {
-			Console.SetCursorPosition(rightStart, StatusBarLine);
+		if (!string.IsNullOrEmpty(rightText)) {
+			int rightStart = width - rightText.Length;
+			Console.SetCursorPosition(rightStart, statusBarLine);
 			Console.BackgroundColor = ConsoleColor.DarkCyan;
 			Console.ForegroundColor = ConsoleColor.White;
 			Console.Write(rightText);
@@ -249,9 +241,36 @@ class Render {
 
 		Console.BackgroundColor = ConsoleColor.Black;
 		Console.ForegroundColor = ConsoleColor.White;
-		setCursor(buffer.line);
-		Console.CursorVisible = true;
 	}
 
+	public void drawStatusBar() {
+		var (filePath, fileData, column, line, statusBarMode, searchedChars) = statusBar.getData();
+		int width = Console.WindowWidth;
+		if (width <= 0) return;
+
+		Console.SetCursorPosition(0, StatusBarLine);
+		Console.BackgroundColor = ConsoleColor.DarkBlue;
+		Console.ForegroundColor = ConsoleColor.White;
+		Console.Write("\x1b[K");
+
+		string leftRaw = statusBarMode == StatusBarMode.Search && !string.IsNullOrEmpty(searchedChars)
+			? $" {filePath} SEARCH: {searchedChars} "
+			: $" {filePath} ";
+
+		string middleRaw = $" {fileData.Extension}  {fileData.Encoding}  {fileData.FileSize} ";
+
+		string rightRaw = $" Ln {line + 1}/ Col {column + 1} ";
+
+		string leftText = fitStatusSegment(leftRaw, width);
+		string middleText = fitStatusSegment(middleRaw, width);
+		string rightText = fitStatusSegment(rightRaw, width);
+
+		drawStatusBarSegments(leftText, middleText, rightText, StatusBarLine);
+
+		setCursor(buffer.line);
+		Console.BackgroundColor = ConsoleColor.Black;
+		Console.ForegroundColor = ConsoleColor.White;
+		Console.CursorVisible = true;
+	}
 
 }

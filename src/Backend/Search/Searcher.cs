@@ -1,7 +1,7 @@
 class Searcher {
 	Buffer buffer;
 	public bool isSearching;
-	List<char> searchedChars;
+	public List<char> searchedChars;
 
 	public List<List<Findling>> findlings;
 	public Searcher(Buffer buffer) {

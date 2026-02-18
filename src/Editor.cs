@@ -14,10 +14,10 @@ class Editor {
 	public Editor() {
 		buffer = new Buffer();
 		searcher = new Searcher(buffer);
-		render = new Render(buffer, searcher);
 		fileExplorer = new FileExplorer();
 		redoUndoHandler = new RedoUndoHandler(buffer);
-		statusBar = new StatusBar(buffer, fileExplorer);
+		statusBar = new StatusBar(buffer, fileExplorer, searcher);
+		render = new Render(buffer, searcher, statusBar);
 
 		Console.CancelKeyPress += async (s, e) => {
 			e.Cancel = true;
@@ -36,11 +36,12 @@ class Editor {
 
 		render.resetView();
 		render.printScreen();
-		render.drawStatusBar(statusBar.UpdateStatusBar());
+		render.drawStatusBar();
 		startResizeWatcher();
 
 		while (true) {
 			ConsoleKeyInfo keyInfo = Console.ReadKey(intercept: true);
+
 
 			if (keyInfo.Key == ConsoleKey.Q && keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)) {
 				Console.Clear();
@@ -257,7 +258,8 @@ class Editor {
 				}
 
 				else if (keyInfo.Key == ConsoleKey.F) {
-					searcher.setSearch("hallo".ToList());
+					statusBar.statusBarMode = StatusBarMode.Search;
+					searcher.setSearch("hi".ToList());
 					render.resetView();
 					render.printScreen();
 				}
@@ -268,16 +270,7 @@ class Editor {
 				render.printLine(buffer.line, false);
 			}
 
-			var updatedStatusBar = statusBar.UpdateStatusBar();
-
-			if (prevStatusBar == default) {
-				render.drawStatusBar(updatedStatusBar);
-				prevStatusBar = updatedStatusBar;
-			}
-			else if (prevStatusBar != updatedStatusBar) {
-				render.drawStatusBar(updatedStatusBar);
-				prevStatusBar = updatedStatusBar;
-			}
+			render.drawStatusBar();
 
 		}
 	}
@@ -328,7 +321,7 @@ class Editor {
 					Console.Clear();
 					render.resetView();
 					render.printScreen();
-					render.drawStatusBar(statusBar.UpdateStatusBar());
+					render.drawStatusBar();
 					prevHeight = Console.WindowHeight;
 					prevWidth = Console.WindowWidth;
 
