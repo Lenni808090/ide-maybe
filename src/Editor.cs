@@ -10,13 +10,16 @@ class Editor {
 	FileExplorer fileExplorer;
 	RedoUndoHandler redoUndoHandler;
 
-	(string filePath, FileData fileData, int column, int line) prevStatusBar = default;
+	bool currTypingSearchedWord = false;
+	List<char> typedSearchedChar;
+
 	public Editor() {
 		buffer = new Buffer();
 		searcher = new Searcher(buffer);
 		fileExplorer = new FileExplorer();
 		redoUndoHandler = new RedoUndoHandler(buffer);
 		statusBar = new StatusBar(buffer, fileExplorer, searcher);
+		typedSearchedChar = new();
 		render = new Render(buffer, searcher, statusBar);
 
 		Console.CancelKeyPress += async (s, e) => {
@@ -89,31 +92,46 @@ class Editor {
 				render.resetView();
 				render.printScreen();
 			}
+			else if (keyInfo.Key == ConsoleKey.Escape) {
+				if (currTypingSearchedWord) {
+					currTypingSearchedWord = false;
+				}
+			}
 			else if (keyInfo.Key == ConsoleKey.Backspace) {
-				if (buffer.column == 0 && buffer.line == 0 && !buffer.isSelecting) continue;
-				if (buffer.isSelecting) {
-					redoUndoHandler.addActionToUndo(new DeleteWhileSelecting(buffer));
-				}
-				else {
-					if (buffer.column == 0) {
-						redoUndoHandler.addActionToUndo(new DeleteLineAction(buffer.line, buffer));
+				if (currTypingSearchedWord) {
+					if (typedSearchedChar.Count > 0) {
+						typedSearchedChar.RemoveAt(typedSearchedChar.Count - 1);
 					}
-					else {
-						if (buffer.isItTab()) {
-							redoUndoHandler.addActionToUndo(new DeleteTabAction(buffer.column, buffer.line));
-						}
-						else {
-							redoUndoHandler.addActionToUndo(new DeleteCharAction(buffer.lines[buffer.line][buffer.column - 1], buffer.column - 1, buffer.line));
-						}
-					}
-				}
-				bool fullRedraw = buffer.backspace();
-				if (fullRedraw) {
+					searcher.setSearch(typedSearchedChar);
 					render.resetView();
 					render.printScreen();
 				}
 				else {
-					render.printLine(buffer.line, false);
+					if (buffer.column == 0 && buffer.line == 0 && !buffer.isSelecting) continue;
+					if (buffer.isSelecting) {
+						redoUndoHandler.addActionToUndo(new DeleteWhileSelecting(buffer));
+					}
+					else {
+						if (buffer.column == 0) {
+							redoUndoHandler.addActionToUndo(new DeleteLineAction(buffer.line, buffer));
+						}
+						else {
+							if (buffer.isItTab()) {
+								redoUndoHandler.addActionToUndo(new DeleteTabAction(buffer.column, buffer.line));
+							}
+							else {
+								redoUndoHandler.addActionToUndo(new DeleteCharAction(buffer.lines[buffer.line][buffer.column - 1], buffer.column - 1, buffer.line));
+							}
+						}
+					}
+					bool fullRedraw = buffer.backspace();
+					if (fullRedraw) {
+						render.resetView();
+						render.printScreen();
+					}
+					else {
+						render.printLine(buffer.line, false);
+					}
 				}
 			}
 			else if (keyInfo.Key == ConsoleKey.LeftArrow) {
@@ -207,28 +225,36 @@ class Editor {
 				render.setCursor(buffer.line);
 			}
 			else if (!char.IsControl(keyInfo.KeyChar)) {
-				if (buffer.pairs.ContainsKey(keyInfo.KeyChar)) {
-					if (buffer.isSelecting) {
-						redoUndoHandler.addActionToUndo(new InsertCharPairActionWhileSelecting(buffer, keyInfo.KeyChar));
-					}
-					else {
-						redoUndoHandler.addActionToUndo(new InsertCharPairAction(keyInfo.KeyChar, buffer.column, buffer.line));
-					}
-					buffer.insertCharPair(keyInfo.KeyChar);
-
+				if (currTypingSearchedWord) {
+					typedSearchedChar.Add(keyInfo.KeyChar);
+					searcher.setSearch(typedSearchedChar);
 					render.resetView();
 					render.printScreen();
 				}
 				else {
-					if (buffer.isSelecting) {
-						redoUndoHandler.addActionToUndo(new InsertCharWhileSelecting(buffer, keyInfo.KeyChar));
+					if (buffer.pairs.ContainsKey(keyInfo.KeyChar)) {
+						if (buffer.isSelecting) {
+							redoUndoHandler.addActionToUndo(new InsertCharPairActionWhileSelecting(buffer, keyInfo.KeyChar));
+						}
+						else {
+							redoUndoHandler.addActionToUndo(new InsertCharPairAction(keyInfo.KeyChar, buffer.column, buffer.line));
+						}
+						buffer.insertCharPair(keyInfo.KeyChar);
+
+						render.resetView();
+						render.printScreen();
 					}
 					else {
-						redoUndoHandler.addActionToUndo(new InsertCharAction(keyInfo.KeyChar, buffer.column, buffer.line));
+						if (buffer.isSelecting) {
+							redoUndoHandler.addActionToUndo(new InsertCharWhileSelecting(buffer, keyInfo.KeyChar));
+						}
+						else {
+							redoUndoHandler.addActionToUndo(new InsertCharAction(keyInfo.KeyChar, buffer.column, buffer.line));
+						}
+						buffer.insertChar(keyInfo.KeyChar);
+						render.resetView();
+						render.printScreen();
 					}
-					buffer.insertChar(keyInfo.KeyChar);
-					render.resetView();
-					render.printScreen();
 				}
 			}
 			else if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)) {
@@ -259,7 +285,7 @@ class Editor {
 
 				else if (keyInfo.Key == ConsoleKey.F) {
 					statusBar.statusBarMode = StatusBarMode.Search;
-					searcher.setSearch("hi".ToList());
+					currTypingSearchedWord = true;
 					render.resetView();
 					render.printScreen();
 				}
