@@ -436,8 +436,8 @@ class Buffer {
 			int secoundCharlinePos = getSelectedArea().endLine;
 
 			insertCharAtPos(c, firstCharColumnPos, firstCharlinePos);
-			insertCharAtPos(secoundC, secoundCharColumnPos + 1, secoundCharlinePos);
 			int endColumnPos = firstCharlinePos == secoundCharlinePos ? secoundCharColumnPos + 1 : secoundCharColumnPos;
+			insertCharAtPos(secoundC, endColumnPos, secoundCharlinePos);
 			setSelectedArea(firstCharlinePos, secoundCharlinePos, firstCharColumnPos + 1, endColumnPos);
 			line = firstCharlinePos;
 			column = firstCharColumnPos + 1;
