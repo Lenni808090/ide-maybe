@@ -243,14 +243,29 @@ class Buffer {
 
 
 	public void newLine() {
-		List<char> newLine = lines[line].Slice(column, lines[line].Count - column);
-		lines[line].RemoveRange(column, lines[line].Count - column);
-		int leadingWhiteSpaces = getPrevWhiteSpaces(line);
-		line++;
-		column = leadingWhiteSpaces;
-		prefColumn = leadingWhiteSpaces;
-		lines.Insert(line, [.. new string(' ', leadingWhiteSpaces).ToCharArray()]);
-		lines[line].AddRange(newLine);
+		if (isSelecting) {
+			var selectedArea = getSelectedArea();
+			List<char> newLine = lines[selectedArea.endLine].Slice(selectedArea.endColumn, lines[selectedArea.endLine].Count - selectedArea.endColumn);
+			lines[selectedArea.endLine].RemoveRange(selectedArea.endColumn, lines[selectedArea.endLine].Count - selectedArea.endColumn);
+			int leadingWhiteSpaces = getPrevWhiteSpaces(selectedArea.startLine);
+			removeSelectedArea();
+			stopSelecting();
+			line = selectedArea.startLine + 1;
+			column = leadingWhiteSpaces;
+			prefColumn = column;
+			lines.Insert(line, [.. new string(' ', leadingWhiteSpaces).ToCharArray()]);
+			lines[line].AddRange(newLine);
+		}
+		else {
+			List<char> newLine = lines[line].Slice(column, lines[line].Count - column);
+			lines[line].RemoveRange(column, lines[line].Count - column);
+			int leadingWhiteSpaces = getPrevWhiteSpaces(line);
+			line++;
+			column = leadingWhiteSpaces;
+			prefColumn = column;
+			lines.Insert(line, [.. new string(' ', leadingWhiteSpaces).ToCharArray()]);
+			lines[line].AddRange(newLine);
+		}
 	}
 
 	public void newLineAtPos(int linePos, int columnPos) {
