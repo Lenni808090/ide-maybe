@@ -147,6 +147,19 @@ class Render {
 
 		}
 
+		bool isEmptySelected = buffer.isSelecting && line.Count == 0 && lineInd >= getSelectedArea().startLine && lineInd <= getSelectedArea().endLine;
+
+		if (isEmptySelected) {
+			Console.BackgroundColor = ConsoleColor.Cyan;
+			Console.ForegroundColor = ConsoleColor.Black;
+			Console.Write(" ");
+			Console.BackgroundColor = ConsoleColor.Black;
+			Console.Write("\x1b[K");
+			setCursor(lineInd);
+			if (!completeRedraw) Console.CursorVisible = true;
+			return;
+		}
+
 		for (int i = 0; i < line.Count; i++) {
 			Span? active = null;
 

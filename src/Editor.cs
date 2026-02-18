@@ -95,6 +95,9 @@ class Editor {
 			else if (keyInfo.Key == ConsoleKey.Escape) {
 				if (currTypingSearchedWord) {
 					currTypingSearchedWord = false;
+					typedSearchedChar.Clear();
+					searcher.clearSearch();
+					render.printScreen();
 				}
 			}
 			else if (keyInfo.Key == ConsoleKey.Backspace) {

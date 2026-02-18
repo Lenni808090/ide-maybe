@@ -3,35 +3,19 @@ class Searcher {
 	public bool isSearching;
 	public List<char> searchedChars;
 
-	public List<List<Findling>> findlings;
 	public Searcher(Buffer buffer) {
 		this.buffer = buffer;
-		findlings = new List<List<Findling>>();
 		searchedChars = new List<char>();
 	}
 
 	public void setSearch(List<char> chars) {
 		isSearching = true;
 		searchedChars = chars;
-		searchFile();
 	}
 
-	public void searchFile() {
-		if (buffer?.lines == null || searchedChars == null || searchedChars.Count == 0)
-			return;
-
-		findlings.Clear();
-
-		for (int i = 0; i < buffer.lines.Count; i++) {
-			var lineFindlings = searchLine(i);
-
-			if (lineFindlings != null && lineFindlings.Count > 0) {
-				findlings.Add(lineFindlings);
-			}
-			else {
-				findlings.Add(new List<Findling>());
-			}
-		}
+	public void clearSearch() {
+		isSearching = false;
+		searchedChars.Clear();
 	}
 
 	public List<Findling> searchLine(int lineInd) {
