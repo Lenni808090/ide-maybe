@@ -426,32 +426,36 @@ class Buffer {
 
 
 	public void insertCharPair(char c) {
-		char secoundC = pairs[c];
-
-
 		if (isSelecting) {
-			int firstCharColumnPos = getSelectedArea().startColumn;
-			int secoundCharColumnPos = getSelectedArea().endColumn;
-			int firstCharlinePos = getSelectedArea().startLine;
-			int secoundCharlinePos = getSelectedArea().endLine;
+			var area = getSelectedArea();
 
-			insertCharAtPos(c, firstCharColumnPos, firstCharlinePos);
-			int endColumnPos = firstCharlinePos == secoundCharlinePos ? secoundCharColumnPos + 1 : secoundCharColumnPos;
-			insertCharAtPos(secoundC, endColumnPos, secoundCharlinePos);
-			setSelectedArea(firstCharlinePos, secoundCharlinePos, firstCharColumnPos + 1, endColumnPos);
-			line = firstCharlinePos;
-			column = firstCharColumnPos + 1;
-			prefColumn = column;
+			insertCharPairArroundSelection(
+				c,
+				area.startColumn,
+				area.startLine,
+				area.endLine,
+				area.endColumn
+			);
 		}
 		else {
-			lines[line].Insert(column, c);
-			lines[line].Insert(column + 1, secoundC);
-			column++;
-			prefColumn = column;
+			insertCharPairAtPos(c, column, line);
 		}
+
 		clampCursor();
 	}
 
+
+	public void insertCharPairArroundSelection(char c, int firstCharColumnPos, int firstCharlinePos, int secoundCharlinePos, int secoundCharColumnPos) {
+		char secoundC = pairs[c];
+
+		insertCharAtPos(c, firstCharColumnPos, firstCharlinePos);
+		int endColumnPos = firstCharlinePos == secoundCharlinePos ? secoundCharColumnPos + 1 : secoundCharColumnPos;
+		insertCharAtPos(secoundC, endColumnPos, secoundCharlinePos);
+		setSelectedArea(firstCharlinePos, secoundCharlinePos, firstCharColumnPos + 1, endColumnPos);
+		line = firstCharlinePos;
+		column = firstCharColumnPos + 1;
+		prefColumn = column;
+	}
 	public void insertCharPairAtPos(char c, int columPos, int linePos) {
 		char secoundC = pairs[c];
 

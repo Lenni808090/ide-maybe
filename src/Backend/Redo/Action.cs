@@ -46,6 +46,64 @@ class InsertCharPairAction : Action {
 	}
 }
 
+class InsertCharPairActionWhileSelecting : Action {
+	char insertedChar;
+
+	(int startLine, int endLine, int startColumn, int endColumn) before;
+	(int startLine, int endLine, int startColumn, int endColumn) after;
+
+	public InsertCharPairActionWhileSelecting(Buffer buffer, char insertedChar) {
+		this.insertedChar = insertedChar;
+		before = buffer.getSelectedArea();
+
+		if (before.startLine == before.endLine) {
+			after = (
+				before.startLine,
+				before.endLine,
+				before.startColumn + 1,
+				before.endColumn + 1
+			);
+		}
+		else {
+			after = (
+				before.startLine,
+				before.endLine,
+				before.startColumn + 1,
+				before.endColumn
+			);
+		}
+	}
+
+	public override void Redo(Buffer buffer) {
+		buffer.insertCharPairArroundSelection(
+			insertedChar,
+			before.startColumn,
+			before.startLine,
+			before.endLine,
+			before.endColumn
+		);
+
+		buffer.setSelectedArea(
+			after.startLine,
+			after.endLine,
+			after.startColumn,
+			after.endColumn
+		);
+	}
+
+	public override void Undo(Buffer buffer) {
+		int openPos = before.startColumn;
+		int closePos = before.startLine == before.endLine
+			? before.endColumn + 1
+			: before.endColumn;
+
+		buffer.removeCharAtPos(openPos, before.startLine);
+		buffer.removeCharAtPos(closePos, before.endLine);
+		buffer.stopSelecting();
+	}
+}
+
+
 class InsertTabAction : Action {
 	int columnPos;
 	int linePos;
