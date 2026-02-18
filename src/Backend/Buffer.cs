@@ -312,6 +312,8 @@ class Buffer {
 
 	public void moveDown() {
 		if (lines.Count == (line + 1)) {
+			column = lines[line].Count;
+			prefColumn = column;
 			return;
 		}
 		line++;
@@ -336,6 +338,17 @@ class Buffer {
 			column++;
 			prefColumn = column;
 		}
+
+	}
+
+
+	public void moveRightWhileSelecting() {
+		if (isSelecting) {
+			var selectedArea = getSelectedArea();
+			line = selectedArea.endLine;
+			column = selectedArea.endColumn;
+			prefColumn = column;
+		}
 	}
 
 	public void moveLeft() {
@@ -349,6 +362,15 @@ class Buffer {
 		}
 		else {
 			column--;
+			prefColumn = column;
+		}
+	}
+
+	public void moveLeftWhileSelecting() {
+		if (isSelecting) {
+			var selectedArea = getSelectedArea();
+			line = selectedArea.startLine;
+			column = selectedArea.startColumn;
 			prefColumn = column;
 		}
 	}

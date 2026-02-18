@@ -114,11 +114,14 @@ class Editor {
 					render.printScreen();
 				}
 				else {
-					buffer.moveLeft();
 					if (buffer.isSelecting) {
+						buffer.moveLeftWhileSelecting();
 						buffer.stopSelecting();
 						render.resetView();
 						render.printScreen();
+					}
+					else {
+						buffer.moveLeft();
 					}
 				}
 
@@ -135,11 +138,14 @@ class Editor {
 					render.printScreen();
 				}
 				else {
-					buffer.moveRight();
 					if (buffer.isSelecting) {
+						buffer.moveRightWhileSelecting();
 						buffer.stopSelecting();
 						render.resetView();
 						render.printScreen();
+					}
+					else {
+						buffer.moveRight();
 					}
 				}
 
