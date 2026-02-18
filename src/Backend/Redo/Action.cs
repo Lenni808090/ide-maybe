@@ -220,7 +220,26 @@ class DeleteWhileSelecting : SelectionAction {
 	}
 }
 
+class NewLineWhileSelecting : SelectionAction {
 
+	int insertedIndentCount;
+	public NewLineWhileSelecting(Buffer buffer) : base(buffer) {
+		insertedIndentCount = Math.Min(buffer.getPrevWhiteSpaces(selectedArea.endLine), selectedArea.endColumn);
+	}
+
+	public override void Redo(Buffer buffer) {
+		buffer.setSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
+		buffer.newLineAtPos(selectedArea.endLine, selectedArea.endColumn);
+		buffer.removeSelectedArea();
+		buffer.stopSelecting();
+	}
+
+	public override void Undo(Buffer buffer) {
+		buffer.mergeLinesAtPos(selectedArea.endLine, insertedIndentCount);
+		buffer.insertLinesAtPos(selectedArea.startLine, selectedArea.startColumn, deletedData);
+		buffer.setSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
+	}
+}
 
 class InsertCharWhileSelecting : SelectionAction {
 	char insertedChar;

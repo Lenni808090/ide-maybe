@@ -18,6 +18,7 @@ class RedoUndoHandler {
 		if (redoStack.Count == 0) return;
 
 		Action actionToRedo = redoStack[redoStack.Count - 1];
+		buffer.stopSelecting();
 		actionToRedo.Redo(buffer);
 		redoStack.RemoveAt(redoStack.Count - 1);
 		undoStack.Add(actionToRedo);
@@ -27,6 +28,7 @@ class RedoUndoHandler {
 		if (undoStack.Count == 0) return;
 
 		Action actionToUndo = undoStack[undoStack.Count - 1];
+		buffer.stopSelecting();
 		actionToUndo.Undo(buffer);
 		undoStack.RemoveAt(undoStack.Count - 1);
 		redoStack.Add(actionToUndo);

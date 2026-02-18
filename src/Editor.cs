@@ -74,7 +74,12 @@ class Editor {
 			}
 
 			if (keyInfo.Key == ConsoleKey.Enter) {
-				redoUndoHandler.addActionToUndo(new NewLineAction(buffer.line, buffer.column, buffer));
+				if (buffer.isSelecting) {
+					redoUndoHandler.addActionToUndo(new NewLineWhileSelecting(buffer));
+				}
+				else {
+					redoUndoHandler.addActionToUndo(new NewLineAction(buffer.line, buffer.column, buffer));
+				}
 				buffer.newLine();
 				render.resetView();
 				render.printScreen();
