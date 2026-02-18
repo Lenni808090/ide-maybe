@@ -437,8 +437,8 @@ class Buffer {
 
 			insertCharAtPos(c, firstCharColumnPos, firstCharlinePos);
 			insertCharAtPos(secoundC, secoundCharColumnPos + 1, secoundCharlinePos);
-
-			setSelectedArea(firstCharlinePos, secoundCharlinePos, firstCharColumnPos + 1, secoundCharColumnPos + 1);
+			int endColumnPos = firstCharlinePos == secoundCharlinePos ? secoundCharColumnPos + 1 : secoundCharColumnPos;
+			setSelectedArea(firstCharlinePos, secoundCharlinePos, firstCharColumnPos + 1, endColumnPos);
 			line = firstCharlinePos;
 			column = firstCharColumnPos + 1;
 			prefColumn = column;
