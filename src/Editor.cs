@@ -54,6 +54,8 @@ class Editor {
 				break;
 			}
 
+
+			// early returen if searchin
 			if (currTypingSearchedWord) {
 				handleSearchModeInput(keyInfo);
 				render.drawStatusBar();
@@ -281,10 +283,6 @@ class Editor {
 				render.printLine(buffer.line, false);
 			}
 
-			if (searcher.isSearching) {
-				searcher.searchFile();
-			}
-
 			render.drawStatusBar();
 		}
 	}
@@ -299,8 +297,7 @@ class Editor {
 			render.printScreen();
 			return;
 		}
-
-		if (keyInfo.Key == ConsoleKey.Backspace) {
+		else if (keyInfo.Key == ConsoleKey.Backspace) {
 			if (typedSearchedChar.Count > 0) {
 				typedSearchedChar.RemoveAt(typedSearchedChar.Count - 1);
 			}
@@ -316,12 +313,22 @@ class Editor {
 			render.printScreen();
 			return;
 		}
-
-		if (!char.IsControl(keyInfo.KeyChar)) {
+		else if (!char.IsControl(keyInfo.KeyChar)) {
 			typedSearchedChar.Add(keyInfo.KeyChar);
 			searcher.setSearch(typedSearchedChar);
 			render.resetView();
 			render.printScreen();
+		}
+		else if (keyInfo.Key == ConsoleKey.Enter) {
+			if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Shift)) {
+				searcher.moveToPrevFind();
+			}
+			else {
+				searcher.moveToNextFind();
+			}
+			render.resetView();
+			render.printScreen();
+
 		}
 	}
 

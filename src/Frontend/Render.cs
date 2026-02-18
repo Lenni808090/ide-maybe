@@ -112,7 +112,7 @@ class Render {
 		List<Span> spans = new();
 		spans.AddRange(converter.convertTokensToSpans(simpleHighlighter.HighlightLine(line)));
 		if (searcher.isSearching) {
-			spans.AddRange(converter.convertFindlingsToSpans(searcher.searchLine(lineInd)));
+			spans.AddRange(converter.convertFindlingsToSpans(searcher.findlings[lineInd]));
 		}
 		if (buffer.isSelecting) {
 			var sel = getSelectedArea();
