@@ -1,8 +1,0 @@
-{
-	"editor.formatOnSave": true,
-	"[csharp]": {
-		"editor.defaultFormatter": "ms-dotnettools.csharp",
-		"editor.insertSpaces": false,
-		"editor.tabSize": 4
-	}
-}
