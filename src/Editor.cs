@@ -192,6 +192,11 @@ class Editor {
 			}
 			else if (!char.IsControl(keyInfo.KeyChar)) {
 				if (buffer.pairs.ContainsKey(keyInfo.KeyChar)) {
+					if (buffer.isSelecting) {
+					}
+					else {
+						redoUndoHandler.addActionToUndo(new InsertCharPairAction(keyInfo.KeyChar, buffer.column, buffer.line));
+					}
 					buffer.insertCharPair(keyInfo.KeyChar);
 
 					render.resetView();

@@ -26,6 +26,26 @@ class InsertCharAction : Action {
 	}
 }
 
+class InsertCharPairAction : Action {
+	char insertedChar;
+	int columnPos;
+	int linePos;
+
+	public InsertCharPairAction(char insertedChar, int columnPos, int linePos) {
+		this.insertedChar = insertedChar;
+		this.columnPos = columnPos;
+		this.linePos = linePos;
+	}
+	public override void Redo(Buffer buffer) {
+		buffer.insertCharPairAtPos(insertedChar, columnPos, linePos);
+	}
+
+	public override void Undo(Buffer buffer) {
+		buffer.removeCharAtPos(columnPos, linePos);
+		buffer.removeCharAtPos(columnPos + 1, linePos);
+	}
+}
+
 class InsertTabAction : Action {
 	int columnPos;
 	int linePos;

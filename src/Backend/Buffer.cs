@@ -451,6 +451,17 @@ class Buffer {
 		}
 		clampCursor();
 	}
+
+	public void insertCharPairAtPos(char c, int columPos, int linePos) {
+		char secoundC = pairs[c];
+
+		lines[linePos].Insert(columPos, c);
+		lines[linePos].Insert(columPos + 1, secoundC);
+		column = columPos + 1;
+		prefColumn = column;
+		clampCursor();
+	}
+
 	public void insertCharAtPos(char c, int columPos, int linePos) {
 		lines[linePos].Insert(Math.Min(columPos, lines[linePos].Count), c);
 		column = columPos + 1;
