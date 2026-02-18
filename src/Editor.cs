@@ -54,6 +54,12 @@ class Editor {
 				break;
 			}
 
+			if (currTypingSearchedWord) {
+				handleSearchModeInput(keyInfo);
+				render.drawStatusBar();
+				continue;
+			}
+
 			if (Console.KeyAvailable) {
 				List<char> bufferedChars = new List<char>();
 				bufferedChars.Add(keyInfo.KeyChar);
@@ -92,49 +98,31 @@ class Editor {
 				render.resetView();
 				render.printScreen();
 			}
-			else if (keyInfo.Key == ConsoleKey.Escape) {
-				if (currTypingSearchedWord) {
-					currTypingSearchedWord = false;
-					typedSearchedChar.Clear();
-					searcher.clearSearch();
-					render.printScreen();
-				}
-			}
 			else if (keyInfo.Key == ConsoleKey.Backspace) {
-				if (currTypingSearchedWord) {
-					if (typedSearchedChar.Count > 0) {
-						typedSearchedChar.RemoveAt(typedSearchedChar.Count - 1);
+				if (buffer.column == 0 && buffer.line == 0 && !buffer.isSelecting) continue;
+				if (buffer.isSelecting) {
+					redoUndoHandler.addActionToUndo(new DeleteWhileSelecting(buffer));
+				}
+				else {
+					if (buffer.column == 0) {
+						redoUndoHandler.addActionToUndo(new DeleteLineAction(buffer.line, buffer));
 					}
-					searcher.setSearch(typedSearchedChar);
+					else {
+						if (buffer.isItTab()) {
+							redoUndoHandler.addActionToUndo(new DeleteTabAction(buffer.column, buffer.line));
+						}
+						else {
+							redoUndoHandler.addActionToUndo(new DeleteCharAction(buffer.lines[buffer.line][buffer.column - 1], buffer.column - 1, buffer.line));
+						}
+					}
+				}
+				bool fullRedraw = buffer.backspace();
+				if (fullRedraw) {
 					render.resetView();
 					render.printScreen();
 				}
 				else {
-					if (buffer.column == 0 && buffer.line == 0 && !buffer.isSelecting) continue;
-					if (buffer.isSelecting) {
-						redoUndoHandler.addActionToUndo(new DeleteWhileSelecting(buffer));
-					}
-					else {
-						if (buffer.column == 0) {
-							redoUndoHandler.addActionToUndo(new DeleteLineAction(buffer.line, buffer));
-						}
-						else {
-							if (buffer.isItTab()) {
-								redoUndoHandler.addActionToUndo(new DeleteTabAction(buffer.column, buffer.line));
-							}
-							else {
-								redoUndoHandler.addActionToUndo(new DeleteCharAction(buffer.lines[buffer.line][buffer.column - 1], buffer.column - 1, buffer.line));
-							}
-						}
-					}
-					bool fullRedraw = buffer.backspace();
-					if (fullRedraw) {
-						render.resetView();
-						render.printScreen();
-					}
-					else {
-						render.printLine(buffer.line, false);
-					}
+					render.printLine(buffer.line, false);
 				}
 			}
 			else if (keyInfo.Key == ConsoleKey.LeftArrow) {
@@ -228,36 +216,28 @@ class Editor {
 				render.setCursor(buffer.line);
 			}
 			else if (!char.IsControl(keyInfo.KeyChar)) {
-				if (currTypingSearchedWord) {
-					typedSearchedChar.Add(keyInfo.KeyChar);
-					searcher.setSearch(typedSearchedChar);
+				if (buffer.pairs.ContainsKey(keyInfo.KeyChar)) {
+					if (buffer.isSelecting) {
+						redoUndoHandler.addActionToUndo(new InsertCharPairActionWhileSelecting(buffer, keyInfo.KeyChar));
+					}
+					else {
+						redoUndoHandler.addActionToUndo(new InsertCharPairAction(keyInfo.KeyChar, buffer.column, buffer.line));
+					}
+					buffer.insertCharPair(keyInfo.KeyChar);
+
 					render.resetView();
 					render.printScreen();
 				}
 				else {
-					if (buffer.pairs.ContainsKey(keyInfo.KeyChar)) {
-						if (buffer.isSelecting) {
-							redoUndoHandler.addActionToUndo(new InsertCharPairActionWhileSelecting(buffer, keyInfo.KeyChar));
-						}
-						else {
-							redoUndoHandler.addActionToUndo(new InsertCharPairAction(keyInfo.KeyChar, buffer.column, buffer.line));
-						}
-						buffer.insertCharPair(keyInfo.KeyChar);
-
-						render.resetView();
-						render.printScreen();
+					if (buffer.isSelecting) {
+						redoUndoHandler.addActionToUndo(new InsertCharWhileSelecting(buffer, keyInfo.KeyChar));
 					}
 					else {
-						if (buffer.isSelecting) {
-							redoUndoHandler.addActionToUndo(new InsertCharWhileSelecting(buffer, keyInfo.KeyChar));
-						}
-						else {
-							redoUndoHandler.addActionToUndo(new InsertCharAction(keyInfo.KeyChar, buffer.column, buffer.line));
-						}
-						buffer.insertChar(keyInfo.KeyChar);
-						render.resetView();
-						render.printScreen();
+						redoUndoHandler.addActionToUndo(new InsertCharAction(keyInfo.KeyChar, buffer.column, buffer.line));
 					}
+					buffer.insertChar(keyInfo.KeyChar);
+					render.resetView();
+					render.printScreen();
 				}
 			}
 			else if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)) {
@@ -289,6 +269,8 @@ class Editor {
 				else if (keyInfo.Key == ConsoleKey.F) {
 					statusBar.statusBarMode = StatusBarMode.Search;
 					currTypingSearchedWord = true;
+					typedSearchedChar.Clear();
+					searcher.clearSearch();
 					render.resetView();
 					render.printScreen();
 				}
@@ -299,8 +281,47 @@ class Editor {
 				render.printLine(buffer.line, false);
 			}
 
-			render.drawStatusBar();
+			if (searcher.isSearching) {
+				searcher.searchFile();
+			}
 
+			render.drawStatusBar();
+		}
+	}
+
+	private void handleSearchModeInput(ConsoleKeyInfo keyInfo) {
+		if (keyInfo.Key == ConsoleKey.Escape) {
+			currTypingSearchedWord = false;
+			typedSearchedChar.Clear();
+			searcher.clearSearch();
+			statusBar.statusBarMode = StatusBarMode.Normal;
+			render.resetView();
+			render.printScreen();
+			return;
+		}
+
+		if (keyInfo.Key == ConsoleKey.Backspace) {
+			if (typedSearchedChar.Count > 0) {
+				typedSearchedChar.RemoveAt(typedSearchedChar.Count - 1);
+			}
+
+			if (typedSearchedChar.Count == 0) {
+				searcher.clearSearch();
+			}
+			else {
+				searcher.setSearch(typedSearchedChar);
+			}
+
+			render.resetView();
+			render.printScreen();
+			return;
+		}
+
+		if (!char.IsControl(keyInfo.KeyChar)) {
+			typedSearchedChar.Add(keyInfo.KeyChar);
+			searcher.setSearch(typedSearchedChar);
+			render.resetView();
+			render.printScreen();
 		}
 	}
 
