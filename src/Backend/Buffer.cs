@@ -295,6 +295,10 @@ class Buffer {
 
 	public void moveUp() {
 		if (line == 0) {
+			if (column != 0) {
+				column = 0;
+				prefColumn = column;
+			}
 			return;
 		}
 		line--;
