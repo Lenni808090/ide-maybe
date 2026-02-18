@@ -5,13 +5,16 @@ class Editor {
 	Buffer buffer;
 	Render render;
 	StatusBar statusBar;
+
+	Searcher searcher;
 	FileExplorer fileExplorer;
 	RedoUndoHandler redoUndoHandler;
 
 	(string filePath, FileData fileData, int column, int line) prevStatusBar = default;
 	public Editor() {
 		buffer = new Buffer();
-		render = new Render(buffer);
+		searcher = new Searcher(buffer);
+		render = new Render(buffer, searcher);
 		fileExplorer = new FileExplorer();
 		redoUndoHandler = new RedoUndoHandler(buffer);
 		statusBar = new StatusBar(buffer, fileExplorer);
@@ -29,6 +32,7 @@ class Editor {
 		Console.Write("\x1b[?2004h");
 
 		buffer.lines = fileExplorer.readFile(@"C:\Users\leona\source\repos\ide-maybe\test.txt");
+
 
 		render.resetView();
 		render.printScreen();
@@ -248,6 +252,12 @@ class Editor {
 				}
 				else if (keyInfo.Key == ConsoleKey.Y) {
 					redoUndoHandler.redo();
+					render.resetView();
+					render.printScreen();
+				}
+
+				else if (keyInfo.Key == ConsoleKey.F) {
+					searcher.setSearch("hallo".ToList());
 					render.resetView();
 					render.printScreen();
 				}

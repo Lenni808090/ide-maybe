@@ -6,6 +6,8 @@ using System.Threading.Tasks.Dataflow;
 class Render {
 	Buffer buffer;
 	SimpleHighlighter simpleHighlighter;
+	Searcher searcher;
+	Converter converter;
 	public int topLine = 0;
 	public int bottomLine = 0;
 
@@ -14,37 +16,16 @@ class Render {
 	private int ContentHeight => Console.WindowHeight - 1;
 	private int StatusBarLine => Console.WindowHeight - 1;
 
-	public Render(Buffer buffer) {
+	public Render(Buffer buffer, Searcher searcher) {
 		this.buffer = buffer;
+		this.searcher = searcher;
 		simpleHighlighter = new SimpleHighlighter();
+		converter = new();
 		currentDistFromEdge = 4;
 	}
 
 
-	public ConsoleColor getColor(TokenKind tokenKind) {
-		switch (tokenKind) {
 
-			case TokenKind.Identifier:
-				return ConsoleColor.White;
-			case TokenKind.Keyword:
-				return ConsoleColor.Red;
-			case TokenKind.Number:
-				return ConsoleColor.DarkBlue;
-			case TokenKind.String:
-				return ConsoleColor.DarkYellow;
-			case TokenKind.Whitespace:
-				return ConsoleColor.White;
-			case TokenKind.Unknown:
-				return ConsoleColor.White;
-			case TokenKind.Operator:
-				return ConsoleColor.Red;
-			case TokenKind.Comment:
-				return ConsoleColor.Gray;
-			default:
-				return ConsoleColor.White;
-
-		}
-	}
 
 	public void resetView() {
 		int h = ContentHeight;
@@ -124,68 +105,69 @@ class Render {
 	public void printLine(int lineInd, bool completeRedraw) {
 		Console.CursorVisible = false;
 		printLineNumber(lineInd);
-		List<char> lineToPrint = buffer.lines[lineInd];
-		List<Token> tokensToPrint = simpleHighlighter.HighlightLine(lineToPrint);
-		int currentTokenInd = 0;
-		Token currentToken = tokensToPrint.Count == 0 ? new Token { Start = 0, Length = 0, tokenKind = TokenKind.Unknown } : tokensToPrint[currentTokenInd];
-		int i = 0;
-
-
-		if (buffer.isSelecting) {
-			var selectedArea = getSelectedArea();
-			if (selectedArea.startLine < lineInd && selectedArea.endLine > lineInd) {
-				Console.BackgroundColor = ConsoleColor.Cyan;
-			}
-
-			if (lineToPrint.Count == 0 && Console.BackgroundColor == ConsoleColor.Cyan) {
-				Console.Write(" ");
-			}
-
-			foreach (char c in lineToPrint) {
-				if (selectedArea.startLine == lineInd && selectedArea.startColumn == i) {
-					if (i == selectedArea.endColumn && selectedArea.startLine == selectedArea.endLine) {
-						Console.BackgroundColor = ConsoleColor.Black;
-					}
-					else {
-						Console.BackgroundColor = ConsoleColor.Cyan;
-					}
-				}
-				else if (selectedArea.endLine == lineInd) {
-					if (i < selectedArea.endColumn && selectedArea.endLine != selectedArea.startLine) {
-						Console.BackgroundColor = ConsoleColor.Cyan;
-					}
-					else if (i == selectedArea.endColumn) {
-						Console.BackgroundColor = ConsoleColor.Black;
-					}
-				}
-				Console.ForegroundColor = getColor(currentToken.tokenKind);
-				Console.Write(c);
-				i++;
-				if (i >= currentToken.Start + currentToken.Length) {
-					currentTokenInd++;
-					if (currentTokenInd < tokensToPrint.Count) {
-						currentToken = tokensToPrint[currentTokenInd];
-					}
-				}
-
-			}
+		List<char> line = buffer.lines[lineInd];
+		List<Span> spans = new();
+		spans.AddRange(converter.convertTokensToSpans(simpleHighlighter.HighlightLine(line)));
+		if (searcher.isSearching) {
+			spans.AddRange(converter.convertFindlingsToSpans(searcher.searchLine(lineInd)));
 		}
-		else {
-			Console.BackgroundColor = ConsoleColor.Black;
-			foreach (char c in lineToPrint) {
-				Console.ForegroundColor = getColor(currentToken.tokenKind);
-				Console.Write(c);
-				i++;
-				if (i >= currentToken.Start + currentToken.Length) {
-					currentTokenInd++;
-					if (currentTokenInd < tokensToPrint.Count) {
-						currentToken = tokensToPrint[currentTokenInd];
+		if (buffer.isSelecting) {
+			var sel = getSelectedArea();
+
+			int startLine = sel.startLine;
+			int endLine = sel.endLine;
+			int startCol = sel.startColumn;
+			int endCol = sel.endColumn;
+
+			int selectStart = 0;
+			int selectLength = 0;
+
+			if (lineInd < startLine || lineInd > endLine) {
+			}
+			else if (startLine == endLine) {
+				selectStart = startCol;
+				selectLength = endCol - startCol;
+			}
+			else if (lineInd == startLine) {
+				selectStart = startCol;
+				selectLength = line.Count - startCol;
+			}
+			else if (lineInd == endLine) {
+				selectStart = 0;
+				selectLength = endCol;
+			}
+			else {
+				selectStart = 0;
+				selectLength = line.Count;
+			}
+			spans.Add(converter.convertSelectionToSpan(selectStart, selectLength));
+
+		}
+
+		for (int i = 0; i < line.Count; i++) {
+			Span? active = null;
+
+			foreach (var s in spans) {
+				if (i >= s.Start && i < s.Start + s.Lenght) {
+					if (active == null || s.Priority > active.Value.Priority) {
+						active = s;
 					}
 				}
-
 			}
+
+			if (active.HasValue) {
+				Console.ForegroundColor = active.Value.ForegroundColor;
+				Console.BackgroundColor = active.Value.BackgroundColor ?? ConsoleColor.Black;
+			}
+			else {
+				Console.ForegroundColor = ConsoleColor.Gray;
+				Console.BackgroundColor = ConsoleColor.Black;
+			}
+
+			Console.Write(line[i]);
 		}
 		Console.BackgroundColor = ConsoleColor.Black;
+		Console.ForegroundColor = ConsoleColor.White;
 		Console.Write("\x1b[K");
 		setCursor(lineInd);
 		if (!completeRedraw) {
