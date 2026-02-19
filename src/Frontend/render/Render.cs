@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics;
 using System.Security.AccessControl;
 using System.Threading.Tasks.Dataflow;
+using Microsoft.VisualBasic;
 
 class Render {
 	Buffer buffer;
@@ -257,7 +258,7 @@ class Render {
 	}
 
 	public void drawStatusBar() {
-		var (filePath, fileData, column, line, statusBarMode, searchedChars) = statusBar.getData();
+		var (filePath, fileData, column, line, statusBarMode, searchedChars, replaceChars, showReplace) = statusBar.getData();
 		int width = Console.WindowWidth;
 		if (width <= 0) return;
 
@@ -266,11 +267,21 @@ class Render {
 		Console.ForegroundColor = ConsoleColor.White;
 		Console.Write("\x1b[K");
 
-		string leftRaw = statusBarMode == StatusBarMode.Search && !string.IsNullOrEmpty(searchedChars)
-			? $" {filePath} SEARCH: {searchedChars} "
-			: $" {filePath} ";
-
-		string middleRaw = $" {fileData.Extension}  {fileData.Encoding}  {fileData.FileSize} ";
+		string leftRaw;
+		string middleRaw;
+		if (statusBarMode == StatusBarMode.Search) {
+			if (showReplace) {
+				leftRaw = $" SEARCH: {searchedChars} REPLACE: {replaceChars} ";
+			}
+			else {
+				leftRaw = $" SEARCH: {searchedChars} ";
+			}
+			middleRaw = "";
+		}
+		else {
+			leftRaw = $" {filePath} ";
+			middleRaw = $" {fileData.Extension}  {fileData.Encoding}  {fileData.FileSize} ";
+		}
 
 		string rightRaw = $" Ln {line + 1}/ Col {column + 1} ";
 

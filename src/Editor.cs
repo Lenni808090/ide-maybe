@@ -5,21 +5,25 @@ class Editor {
 	Buffer buffer;
 	Render render;
 	StatusBar statusBar;
-
+	Replacer replacer;
 	Searcher searcher;
 	FileExplorer fileExplorer;
 	RedoUndoHandler redoUndoHandler;
 
-	bool currTypingSearchedWord = false;
+	SearchInputMode searchInputMode = SearchInputMode.Search;
+	bool currInSearchMode = false;
 	List<char> typedSearchedChar;
+	List<char> typedReplaceChar;
 
 	public Editor() {
 		buffer = new Buffer();
 		searcher = new Searcher(buffer);
 		fileExplorer = new FileExplorer();
 		redoUndoHandler = new RedoUndoHandler(buffer);
-		statusBar = new StatusBar(buffer, fileExplorer, searcher);
+		replacer = new Replacer(buffer, searcher);
+		statusBar = new StatusBar(buffer, fileExplorer, searcher, replacer);
 		typedSearchedChar = new();
+		typedReplaceChar = new();
 		render = new Render(buffer, searcher, statusBar);
 
 		Console.CancelKeyPress += async (s, e) => {
@@ -56,7 +60,7 @@ class Editor {
 
 
 			// early returen if searchin
-			if (currTypingSearchedWord) {
+			if (currInSearchMode) {
 				handleSearchModeInput(keyInfo);
 				render.drawStatusBar();
 				continue;
@@ -267,11 +271,25 @@ class Editor {
 					render.resetView();
 					render.printScreen();
 				}
-
 				else if (keyInfo.Key == ConsoleKey.F) {
 					statusBar.statusBarMode = StatusBarMode.Search;
-					currTypingSearchedWord = true;
+					currInSearchMode = true;
+					searchInputMode = SearchInputMode.Search;
+					replacer.clearReplace();
 					typedSearchedChar.Clear();
+					typedReplaceChar.Clear();
+					searcher.clearSearch();
+					render.resetView();
+					render.printScreen();
+				}
+				else if (keyInfo.Key == ConsoleKey.H) {
+					statusBar.statusBarMode = StatusBarMode.Search;
+					currInSearchMode = true;
+					searchInputMode = SearchInputMode.Search;
+					replacer.clearReplace();
+					replacer.isReplacing = true;
+					typedSearchedChar.Clear();
+					typedReplaceChar.Clear();
 					searcher.clearSearch();
 					render.resetView();
 					render.printScreen();
@@ -289,8 +307,11 @@ class Editor {
 
 	private void handleSearchModeInput(ConsoleKeyInfo keyInfo) {
 		if (keyInfo.Key == ConsoleKey.Escape) {
-			currTypingSearchedWord = false;
+			currInSearchMode = false;
+			searchInputMode = SearchInputMode.Search;
+			replacer.clearReplace();
 			typedSearchedChar.Clear();
+			typedReplaceChar.Clear();
 			searcher.clearSearch();
 			statusBar.statusBarMode = StatusBarMode.Normal;
 			render.resetView();
@@ -298,15 +319,23 @@ class Editor {
 			return;
 		}
 		else if (keyInfo.Key == ConsoleKey.Backspace) {
-			if (typedSearchedChar.Count > 0) {
-				typedSearchedChar.RemoveAt(typedSearchedChar.Count - 1);
-			}
+			if (searchInputMode == SearchInputMode.Search) {
+				if (typedSearchedChar.Count > 0) {
+					typedSearchedChar.RemoveAt(typedSearchedChar.Count - 1);
+				}
 
-			if (typedSearchedChar.Count == 0) {
-				searcher.clearSearch();
+				if (typedSearchedChar.Count == 0) {
+					searcher.clearSearch();
+				}
+				else {
+					searcher.setSearch(typedSearchedChar);
+				}
 			}
-			else {
-				searcher.setSearch(typedSearchedChar);
+			else if (searchInputMode == SearchInputMode.Replace) {
+				if (typedReplaceChar.Count > 0) {
+					typedReplaceChar.RemoveAt(typedReplaceChar.Count - 1);
+				}
+				replacer.setCharsUsedToReplace(typedReplaceChar);
 			}
 
 			render.resetView();
@@ -314,18 +343,49 @@ class Editor {
 			return;
 		}
 		else if (!char.IsControl(keyInfo.KeyChar)) {
-			typedSearchedChar.Add(keyInfo.KeyChar);
-			searcher.setSearch(typedSearchedChar);
+			if (searchInputMode == SearchInputMode.Search) {
+				if (typedSearchedChar.Count > 25) return;
+				typedSearchedChar.Add(keyInfo.KeyChar);
+				searcher.setSearch(typedSearchedChar);
+			}
+			else if (searchInputMode == SearchInputMode.Replace) {
+				if (typedReplaceChar.Count > 25) return;
+				typedReplaceChar.Add(keyInfo.KeyChar);
+				replacer.setCharsUsedToReplace(typedReplaceChar);
+			}
 			render.resetView();
 			render.printScreen();
 		}
+		else if (keyInfo.Key == ConsoleKey.Tab) {
+			if (replacer.isReplacing) {
+				searchInputMode = searchInputMode == SearchInputMode.Search ? SearchInputMode.Replace : SearchInputMode.Search;
+			}
+		}
+		else if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)) {
+			if (keyInfo.Key == ConsoleKey.H) {
+				replacer.clearReplace();
+				replacer.isReplacing = true;
+				searchInputMode = SearchInputMode.Search;
+			}
+		}
 		else if (keyInfo.Key == ConsoleKey.Enter) {
-			if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Shift)) {
-				searcher.moveToPrevFind();
+			if (searchInputMode == SearchInputMode.Search) {
+				if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Shift)) {
+					searcher.moveToPrevFind();
+				}
+				else {
+					searcher.moveToNextFind();
+				}
 			}
-			else {
-				searcher.moveToNextFind();
+			else if (searchInputMode == SearchInputMode.Replace) {
+				if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)) {
+					replacer.replaceAllFindilngs();
+				}
+				else {
+					replacer.replaceCurrentFindling();
+				}
 			}
+
 			render.resetView();
 			render.printScreen();
 

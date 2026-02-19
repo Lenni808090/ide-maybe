@@ -2,11 +2,18 @@ class Replacer {
 
 	Buffer buffer;
 	Searcher searcher;
-	List<char> charsUsedToReplace = new List<char>();
+
+	public bool isReplacing;
+	public List<char> charsUsedToReplace = new List<char>();
 
 	public Replacer(Buffer buffer, Searcher searcher) {
 		this.buffer = buffer;
 		this.searcher = searcher;
+	}
+
+	public void clearReplace() {
+		isReplacing = false;
+		charsUsedToReplace.Clear();
 	}
 
 	public void replaceCurrentFindling() {
@@ -16,6 +23,9 @@ class Replacer {
 		searcher.removeFindlingByInd(searcher.currentFindInd.Value);
 		buffer.removeArea(currentFindling.Value.line, currentFindling.Value.line, currentFindling.Value.Start, currentFindling.Value.Start + currentFindling.Value.Length);
 		buffer.insertCharsAtPos(currentFindling.Value.line, currentFindling.Value.Start, charsUsedToReplace);
+		searcher.searchFile();
+		buffer.line = currentFindling.Value.line;
+		buffer.column = currentFindling.Value.Start;
 		buffer.clampCursor();
 	}
 

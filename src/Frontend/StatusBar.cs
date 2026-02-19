@@ -5,27 +5,31 @@ class StatusBar {
 	Buffer buffer;
 	FileExplorer fileExplorer;
 	Searcher searcher;
+	Replacer replacer;
 
 	public StatusBarMode statusBarMode;
 
-	public string? search = "";
-	public int line;
-	public int column;
-	public FileData fileData;
-	public string filePath;
+	string search = "";
+	bool showReplace;
+	string replace = "";
+	int line;
+	int column;
+	FileData fileData;
+	string filePath;
 
-	public StatusBar(Buffer buffer, FileExplorer fileExplorer, Searcher searcher) {
+	public StatusBar(Buffer buffer, FileExplorer fileExplorer, Searcher searcher, Replacer replacer) {
 		this.buffer = buffer;
 		this.searcher = searcher;
+		this.replacer = replacer;
 		this.fileExplorer = fileExplorer;
 		this.filePath = fileExplorer.cuurentFilePath;
 		this.fileData = new FileData("", "0 KB", "Unknown");
 	}
 
-	public (string filePath, FileData fileData, int column, int line, StatusBarMode statusBarMode, string? searchedChars) getData() {
+	public (string filePath, FileData fileData, int column, int line, StatusBarMode statusBarMode, string searchedChars, string replaceChars, bool showReplace) getData() {
 		UpdateStatusBar();
 
-		return (filePath, fileData, column, line, statusBarMode, search);
+		return (filePath, fileData, column, line, statusBarMode, search, replace, showReplace);
 	}
 
 	public void UpdateStatusBar() {
@@ -35,10 +39,20 @@ class StatusBar {
 		line = buffer.line;
 
 		if (statusBarMode == StatusBarMode.Normal) {
-			search = null;
+			search = "";
+			replace = "";
+			showReplace = false;
 		}
-		else {
+		else if (statusBarMode == StatusBarMode.Search) {
 			search = new string(searcher.searchedChars.ToArray());
+			if (replacer.isReplacing) {
+				showReplace = true;
+				replace = new string(replacer.charsUsedToReplace.ToArray());
+			}
+			else {
+				showReplace = false;
+				replace = "";
+			}
 		}
 	}
 
@@ -68,4 +82,5 @@ public record FileData(string Extension, string FileSize, string Encoding);
 enum StatusBarMode {
 	Normal,
 	Search,
+
 }

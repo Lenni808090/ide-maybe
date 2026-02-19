@@ -72,6 +72,7 @@ class Searcher {
 				test -= findlings[i].Count;
 			}
 		}
+
 		calculateTotalFindlings();
 	}
 	public void moveToNextFind() {
