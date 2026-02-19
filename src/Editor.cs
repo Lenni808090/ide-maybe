@@ -383,7 +383,7 @@ class Editor {
 				}
 			}
 			else if (searchInputMode == SearchInputMode.Replace) {
-				if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)) {
+				if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Shift)) {
 					replacer.replaceAllFindilngs();
 				}
 				else {
