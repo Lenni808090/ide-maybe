@@ -1,39 +1,63 @@
 using System;
-using System.IO;
 using System.Collections.Generic;
-using System.Text;
+using System.IO;
+using System.Linq;
+
 class FileExplorer {
-	public string cuurentFilePath = "";
+	public string currentDirectoryPath { get; private set; }
+	public int selectedIndex { get; private set; }
+	public List<FileExplorerEntry> entries { get; private set; }
 
-
-	public List<List<char>> readFile(string filePath) {
-		string[] lines = File.ReadAllLines(filePath);
-		List<List<char>> readFile = new List<List<char>>();
-		foreach (string line in lines) {
-			readFile.Add([.. line]);
-		}
-		if (readFile.Count == 0) {
-			readFile.Add(new List<char>());
-		}
-		cuurentFilePath = filePath;
-		return readFile;
+	public FileExplorer(string? startDirectoryPath = null) {
+		currentDirectoryPath = startDirectoryPath ?? Directory.GetCurrentDirectory();
+		selectedIndex = 0;
+		entries = new List<FileExplorerEntry>();
+		loadDirectory(currentDirectoryPath);
 	}
 
-	public void saveFile(string path, List<List<char>> contentList) {
-		string tempPath = path + ".tmp";
-		var sb = new StringBuilder();
-
-		for (int i = 0; i < contentList.Count; i++) {
-			sb.Append(contentList[i].ToArray());
-			if (i < contentList.Count - 1)
-				sb.Append(Environment.NewLine);
+	public void loadDirectory(string directoryPath) {
+		if (!Directory.Exists(directoryPath)) {
+			return;
 		}
 
-		string text = sb.ToString();
+		currentDirectoryPath = directoryPath;
+		var loadedEntries = new List<FileExplorerEntry>();
 
-		File.WriteAllText(tempPath, text);
-		File.Replace(tempPath, path, null);
+		DirectoryInfo currentDirectory = new DirectoryInfo(currentDirectoryPath);
+		if (currentDirectory.Parent != null) {
+			loadedEntries.Add(new FileExplorerEntry("..", currentDirectory.Parent.FullName, true));
+		}
+
+		loadedEntries.AddRange(
+			Directory.GetDirectories(currentDirectoryPath)
+				.OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+				.Select(path => new FileExplorerEntry(Path.GetFileName(path), path, true))
+		);
+
+		loadedEntries.AddRange(
+			Directory.GetFiles(currentDirectoryPath)
+				.OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+				.Select(path => new FileExplorerEntry(Path.GetFileName(path), path, false))
+		);
+
+		entries = loadedEntries;
+		selectedIndex = 0;
 	}
 
+	public void moveSelectionUp() {
+		if (entries.Count == 0) return;
+		selectedIndex = Math.Max(0, selectedIndex - 1);
+	}
 
+	public void moveSelectionDown() {
+		if (entries.Count == 0) return;
+		selectedIndex = Math.Min(entries.Count - 1, selectedIndex + 1);
+	}
+
+	public FileExplorerEntry? getSelectedEntry() {
+		if (entries.Count == 0) return null;
+		return entries[selectedIndex];
+	}
 }
+
+public record FileExplorerEntry(string Name, string FullPath, bool IsDirectory);

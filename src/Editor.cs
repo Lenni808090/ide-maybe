@@ -7,7 +7,7 @@ class Editor {
 	StatusBar statusBar;
 	Replacer replacer;
 	Searcher searcher;
-	FileExplorer fileExplorer;
+	FileManager fileManager;
 	RedoUndoHandler redoUndoHandler;
 
 	SearchInputMode searchInputMode = SearchInputMode.Search;
@@ -18,10 +18,10 @@ class Editor {
 	public Editor() {
 		buffer = new Buffer();
 		searcher = new Searcher(buffer);
-		fileExplorer = new FileExplorer();
+		fileManager = new FileManager();
 		redoUndoHandler = new RedoUndoHandler(buffer);
 		replacer = new Replacer(buffer, searcher);
-		statusBar = new StatusBar(buffer, fileExplorer, searcher, replacer);
+		statusBar = new StatusBar(buffer, fileManager, searcher, replacer);
 		typedSearchedChar = new();
 		typedReplaceChar = new();
 		render = new Render(buffer, searcher, statusBar);
@@ -38,7 +38,7 @@ class Editor {
 		Console.Clear();
 		Console.Write("\x1b[?2004h");
 
-		buffer.lines = fileExplorer.readFile(@"C:\Users\leona\source\repos\ide-maybe\test.txt");
+		buffer.lines = fileManager.readFile(@"C:\Users\leona\source\repos\ide-maybe\test.txt");
 
 
 		render.resetView();
@@ -259,7 +259,7 @@ class Editor {
 					render.printScreen();
 				}
 				else if (keyInfo.Key == ConsoleKey.A) {
-					fileExplorer.saveFile(fileExplorer.cuurentFilePath, buffer.lines);
+					fileManager.saveFile(fileManager.currentFilePath, buffer.lines);
 				}
 				else if (keyInfo.Key == ConsoleKey.Z) {
 					redoUndoHandler.undo();

@@ -3,7 +3,7 @@ using System.IO;
 
 class StatusBar {
 	Buffer buffer;
-	FileExplorer fileExplorer;
+	FileManager fileManager;
 	Searcher searcher;
 	Replacer replacer;
 
@@ -17,12 +17,12 @@ class StatusBar {
 	FileData fileData;
 	string filePath;
 
-	public StatusBar(Buffer buffer, FileExplorer fileExplorer, Searcher searcher, Replacer replacer) {
+	public StatusBar(Buffer buffer, FileManager fileManager, Searcher searcher, Replacer replacer) {
 		this.buffer = buffer;
 		this.searcher = searcher;
 		this.replacer = replacer;
-		this.fileExplorer = fileExplorer;
-		this.filePath = fileExplorer.cuurentFilePath;
+		this.fileManager = fileManager;
+		this.filePath = fileManager.currentFilePath;
 		this.fileData = new FileData("", "0 KB", "Unknown");
 	}
 
@@ -33,7 +33,7 @@ class StatusBar {
 	}
 
 	public void UpdateStatusBar() {
-		filePath = fileExplorer.cuurentFilePath;
+		filePath = fileManager.currentFilePath;
 		GetFileData();
 		column = buffer.column;
 		line = buffer.line;
