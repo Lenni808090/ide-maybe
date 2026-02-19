@@ -43,7 +43,7 @@ class Editor {
 
 		render.resetView();
 		render.printScreen();
-		render.drawStatusBar();
+		render.drawStatusBar(searchInputMode);
 		startResizeWatcher();
 
 		while (true) {
@@ -62,7 +62,7 @@ class Editor {
 			// early returen if searchin
 			if (currInSearchMode) {
 				handleSearchModeInput(keyInfo);
-				render.drawStatusBar();
+				render.drawStatusBar(searchInputMode);
 				continue;
 			}
 
@@ -301,7 +301,7 @@ class Editor {
 				render.printLine(buffer.line, false);
 			}
 
-			render.drawStatusBar();
+			render.drawStatusBar(searchInputMode);
 		}
 	}
 
@@ -438,7 +438,7 @@ class Editor {
 					Console.Clear();
 					render.resetView();
 					render.printScreen();
-					render.drawStatusBar();
+					render.drawStatusBar(searchInputMode);
 					prevHeight = Console.WindowHeight;
 					prevWidth = Console.WindowWidth;
 

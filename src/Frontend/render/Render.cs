@@ -257,7 +257,7 @@ class Render {
 		Console.ForegroundColor = ConsoleColor.White;
 	}
 
-	public void drawStatusBar() {
+	public void drawStatusBar(SearchInputMode searchInputMode) {
 		var (filePath, fileData, column, line, statusBarMode, searchedChars, replaceChars, showReplace) = statusBar.getData();
 		int width = Console.WindowWidth;
 		if (width <= 0) return;
@@ -271,7 +271,7 @@ class Render {
 		string middleRaw;
 		if (statusBarMode == StatusBarMode.Search) {
 			if (showReplace) {
-				leftRaw = $" SEARCH: {searchedChars} REPLACE: {replaceChars} ";
+				leftRaw = searchInputMode == SearchInputMode.Search ? $" [SEARCH]: {searchedChars} REPLACE: {replaceChars} " : $" SEARCH: {searchedChars} [REPLACE]: {replaceChars} ";
 			}
 			else {
 				leftRaw = $" SEARCH: {searchedChars} ";
