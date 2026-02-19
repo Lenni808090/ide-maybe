@@ -4,7 +4,7 @@ class Searcher {
 	Buffer buffer;
 	public bool isSearching;
 	public List<char> searchedChars;
-	int totalFinds = 0;
+	public int totalFinds = 0;
 
 	public int? currentFindInd = null;
 	public List<List<Findling>> findlings;
@@ -48,6 +48,31 @@ class Searcher {
 		}
 
 		return findling;
+	}
+
+	public void calculateTotalFindlings() {
+		totalFinds = 0;
+		foreach (var list in findlings) {
+			totalFinds += list.Count;
+		}
+	}
+
+	public void removeFindlingByInd(int findlingInd) {
+
+		findlingInd = normalizeIndex(findlingInd, totalFinds);
+
+		int test = findlingInd;
+
+		for (int i = 0; i < findlings.Count; i++) {
+			if (test < findlings[i].Count) {
+				findlings[i].RemoveAt(test);
+				break;
+			}
+			else {
+				test -= findlings[i].Count;
+			}
+		}
+		calculateTotalFindlings();
 	}
 	public void moveToNextFind() {
 		if (totalFinds == 0) {
@@ -107,7 +132,6 @@ class Searcher {
 		}
 
 		findlings.Clear();
-		totalFinds = 0;
 
 		for (int i = 0; i < buffer.lines.Count; i++) {
 			var lineFindlings = searchLine(i);
@@ -119,11 +143,7 @@ class Searcher {
 				findlings.Add(new List<Findling>());
 			}
 		}
-
-		foreach (var list in findlings) {
-			totalFinds += list.Count;
-		}
-
+		calculateTotalFindlings();
 		clampCurrentFindInd();
 
 	}
