@@ -8,20 +8,26 @@ class Editor {
 	Replacer replacer;
 	Searcher searcher;
 	FileManager fileManager;
+	FileExplorer fileExplorer;
+	FileExplorerRenderer fileExplorerRenderer;
 	RedoUndoHandler redoUndoHandler;
 
 	SearchInputMode searchInputMode = SearchInputMode.Search;
 	bool currInSearchMode = false;
+	bool resizeWatcherStarted = false;
 	List<char> typedSearchedChar;
 	List<char> typedReplaceChar;
 
 	public Editor() {
 		buffer = new Buffer();
 		searcher = new Searcher(buffer);
+		fileExplorer = new FileExplorer();
+		fileExplorerRenderer = new FileExplorerRenderer(fileExplorer);
 		fileManager = new FileManager();
 		redoUndoHandler = new RedoUndoHandler(buffer);
 		replacer = new Replacer(buffer, searcher);
 		statusBar = new StatusBar(buffer, fileManager, searcher, replacer);
+
 		typedSearchedChar = new();
 		typedReplaceChar = new();
 		render = new Render(buffer, searcher, statusBar);
@@ -34,6 +40,29 @@ class Editor {
 
 	int prevTopLine;
 
+
+	public async Task<bool> startFileExploring() {
+		Console.Clear();
+		fileExplorerRenderer.resetDirectoryView();
+		fileExplorerRenderer.renderDirectroys();
+
+
+		while (true) {
+			ConsoleKeyInfo keyInfo = Console.ReadKey(intercept: true);
+
+			if (keyInfo.Key == ConsoleKey.Q && keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)) {
+				return true;
+			}
+
+			else if (keyInfo.Key == ConsoleKey.Escape) {
+				return false;
+			}
+
+
+		}
+	}
+
+
 	public async Task startEditor() {
 		Console.Clear();
 		Console.Write("\x1b[?2004h");
@@ -44,7 +73,11 @@ class Editor {
 		render.resetView();
 		render.printScreen();
 		render.drawStatusBar(searchInputMode);
-		startResizeWatcher();
+
+		if (!resizeWatcherStarted) {
+			resizeWatcherStarted = true;
+			startResizeWatcher();
+		}
 
 		while (true) {
 			ConsoleKeyInfo keyInfo = Console.ReadKey(intercept: true);
@@ -294,6 +327,18 @@ class Editor {
 					render.resetView();
 					render.printScreen();
 				}
+				else if (keyInfo.Key == ConsoleKey.O) {
+					var shouldQuit = await startFileExploring();
+					if (shouldQuit) {
+						Console.Clear();
+						Console.Write("\x1b[?2004l");
+						Console.CursorVisible = true;
+						Console.WriteLine("till next time");
+						break;
+					}
+					render.resetView();
+					render.printScreen();
+				}
 			}
 			else if (keyInfo.Key == ConsoleKey.Tab) {
 				redoUndoHandler.addActionToUndo(new InsertTabAction(buffer.column, buffer.line));
@@ -441,7 +486,6 @@ class Editor {
 		Task.Run(async () => {
 			int prevHeight = Console.WindowHeight;
 			int prevWidth = Console.WindowWidth;
-
 			while (true) {
 				if (Console.WindowHeight != prevHeight || Console.WindowWidth != prevWidth) {
 					Console.Clear();
