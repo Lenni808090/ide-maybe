@@ -300,8 +300,8 @@ class PasteDataWhileSelecting : SelectionAction {
 
 class ReplaceWordAction : Action {
 
-	int line;
-	int start;
+	public int line;
+	public int start;
 	int length;
 
 	List<char> oldChars;
@@ -370,6 +370,10 @@ class ReplaceAllWordsAction : Action {
 		for (int i = 0; i < replaceWordsActions.Count; i++) {
 			replaceWordsActions[i].Undo(buffer);
 		}
+		buffer.line = replaceWordsActions[0].line;
+		buffer.column = replaceWordsActions[0].start;
+
+		buffer.clampCursor();
 	}
 }
 

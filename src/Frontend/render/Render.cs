@@ -8,6 +8,7 @@ class Render {
 	Buffer buffer;
 
 	StatusBar statusBar;
+	StatusBarRenderer statusBarRenderer;
 	SimpleHighlighter simpleHighlighter;
 	Searcher searcher;
 	Converter converter;
@@ -23,6 +24,7 @@ class Render {
 		this.buffer = buffer;
 		this.searcher = searcher;
 		this.statusBar = statusBar;
+		statusBarRenderer = new StatusBarRenderer();
 		simpleHighlighter = new SimpleHighlighter();
 		converter = new();
 		currentDistFromEdge = 4;
@@ -210,86 +212,53 @@ class Render {
 		printSection(topLine);
 	}
 
-	private static string fitStatusSegment(string text, int maxLength) {
-		if (maxLength <= 0) return "";
-		if (text.Length <= maxLength) return text;
-		return text.Substring(0, maxLength);
-	}
-
-	private void drawStatusBarSegments(
-		string leftText,
-		string middleText,
-		string rightText,
-		int statusBarLine
-	) {
-		int width = Console.WindowWidth;
-		if (width <= 0) return;
-
-		Console.SetCursorPosition(0, statusBarLine);
-		Console.BackgroundColor = ConsoleColor.DarkBlue;
-		Console.ForegroundColor = ConsoleColor.White;
-		Console.Write("\x1b[K");
-
-		if (!string.IsNullOrEmpty(leftText)) {
-			Console.SetCursorPosition(0, statusBarLine);
-			Console.BackgroundColor = ConsoleColor.DarkBlue;
-			Console.ForegroundColor = ConsoleColor.White;
-			Console.Write(leftText);
-		}
-
-		if (!string.IsNullOrEmpty(middleText)) {
-			int middleStart = Math.Max(0, (width - rightText.Length - middleText.Length));
-			Console.SetCursorPosition(middleStart, statusBarLine);
-			Console.BackgroundColor = ConsoleColor.Blue;
-			Console.ForegroundColor = ConsoleColor.White;
-			Console.Write(middleText);
-		}
-
-		if (!string.IsNullOrEmpty(rightText)) {
-			int rightStart = width - rightText.Length;
-			Console.SetCursorPosition(rightStart, statusBarLine);
-			Console.BackgroundColor = ConsoleColor.DarkCyan;
-			Console.ForegroundColor = ConsoleColor.White;
-			Console.Write(rightText);
-		}
-
-		Console.BackgroundColor = ConsoleColor.Black;
-		Console.ForegroundColor = ConsoleColor.White;
-	}
-
 	public void drawStatusBar(SearchInputMode searchInputMode) {
 		var (filePath, fileData, column, line, statusBarMode, searchedChars, replaceChars, showReplace) = statusBar.getData();
 		int width = Console.WindowWidth;
 		if (width <= 0) return;
 
-		Console.SetCursorPosition(0, StatusBarLine);
-		Console.BackgroundColor = ConsoleColor.DarkBlue;
-		Console.ForegroundColor = ConsoleColor.White;
-		Console.Write("\x1b[K");
+		List<StatusBarSegment> leftSegments = new();
+		StatusBarSegment rightSegment = new(
+			$" Ln {line + 1}/ Col {column + 1} ",
+			ConsoleColor.DarkCyan
+		);
 
-		string leftRaw;
-		string middleRaw;
 		if (statusBarMode == StatusBarMode.Search) {
+			leftSegments.Add(new StatusBarSegment(
+				searchInputMode == SearchInputMode.Search ? $" [SEARCH]: {searchedChars} " : $" SEARCH: {searchedChars} ",
+				searchInputMode == SearchInputMode.Search ? ConsoleColor.Green : ConsoleColor.DarkGreen
+			));
+
 			if (showReplace) {
-				leftRaw = searchInputMode == SearchInputMode.Search ? $" [SEARCH]: {searchedChars} REPLACE: {replaceChars} " : $" SEARCH: {searchedChars} [REPLACE]: {replaceChars} ";
+				leftSegments.Add(new StatusBarSegment(
+					searchInputMode == SearchInputMode.Replace ? $" [REPLACE]: {replaceChars} " : $" REPLACE: {replaceChars} ",
+					searchInputMode == SearchInputMode.Replace ? ConsoleColor.Blue : ConsoleColor.DarkBlue
+				));
 			}
-			else {
-				leftRaw = $" SEARCH: {searchedChars} ";
-			}
-			middleRaw = "";
+
+			statusBarRenderer.Draw(
+				StatusBarLine,
+				width,
+				ConsoleColor.DarkBlue,
+				leftSegments,
+				rightSegment
+			);
 		}
 		else {
-			leftRaw = $" {filePath} ";
-			middleRaw = $" {fileData.Extension}  {fileData.Encoding}  {fileData.FileSize} ";
+			leftSegments.Add(new StatusBarSegment($" {filePath} ", ConsoleColor.DarkBlue));
+			leftSegments.Add(new StatusBarSegment(
+				$" {fileData.Extension}  {fileData.Encoding}  {fileData.FileSize} ",
+				ConsoleColor.Blue
+			));
+
+			statusBarRenderer.Draw(
+				StatusBarLine,
+				width,
+				ConsoleColor.DarkBlue,
+				leftSegments,
+				rightSegment
+			);
 		}
-
-		string rightRaw = $" Ln {line + 1}/ Col {column + 1} ";
-
-		string leftText = fitStatusSegment(leftRaw, width);
-		string middleText = fitStatusSegment(middleRaw, width);
-		string rightText = fitStatusSegment(rightRaw, width);
-
-		drawStatusBarSegments(leftText, middleText, rightText, StatusBarLine);
 
 		setCursor(buffer.line);
 		Console.BackgroundColor = ConsoleColor.Black;
