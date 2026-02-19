@@ -109,6 +109,12 @@ class Buffer {
 		insertLinesAtPos(line, column, linesToInsertWithTab);
 	}
 
+
+	public void insertCharsAtPos(int linePos, int columnPos, List<char> charsToInsert) {
+		if (charsToInsert.Count == 0) return;
+		lines[linePos].InsertRange(columnPos, charsToInsert);
+	}
+
 	public void insertLinesAtPos(int linePos, int columnPos, List<List<char>> linesToInsertWithTab) {
 		if (linesToInsertWithTab.Count == 0) return;
 		var linesToInsert = convertTabsToSpace(linesToInsertWithTab);
