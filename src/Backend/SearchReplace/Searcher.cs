@@ -4,6 +4,7 @@ class Searcher {
 	Buffer buffer;
 	public bool isSearching;
 	public List<char> searchedChars;
+	int totalFinds = 0;
 
 	int? currentFindInd = null;
 	public List<List<Findling>> findlings;
@@ -14,23 +15,31 @@ class Searcher {
 		searchedChars = new List<char>();
 	}
 
-	public void moveToNextFind() {
-		Findling? nextFindling = null;
+	private static int normalizeIndex(int index, int count) {
+		return ((index % count) + count) % count;
+	}
 
-		int totalFinds = 0;
-		foreach (var list in findlings) {
-			totalFinds += list.Count;
+
+	public void clampCurrentFindInd() {
+		if (totalFinds == 0) {
+			currentFindInd = null;
+			return;
 		}
 
-		//wrap arrround forward;
-		currentFindInd++;
-		currentFindInd = (currentFindInd ?? 0) % totalFinds;
+		currentFindInd = normalizeIndex(currentFindInd ?? 0, totalFinds);
+	}
+	public Findling? getFindlingByInd(int findlingInd) {
+		if (totalFinds == 0) {
+			return null;
+		}
 
-		int test = currentFindInd ?? 0;
+		findlingInd = normalizeIndex(findlingInd, totalFinds);
 
+		int test = findlingInd;
+		Findling? findling = null;
 		for (int i = 0; i < findlings.Count; i++) {
 			if (test < findlings[i].Count) {
-				nextFindling = findlings[i][test];
+				findling = findlings[i][test];
 				break;
 			}
 			else {
@@ -38,37 +47,36 @@ class Searcher {
 			}
 		}
 
+		return findling;
+	}
+	public void moveToNextFind() {
+		if (totalFinds == 0) {
+			return;
+		}
+
+		int nextIndex = currentFindInd.HasValue ? currentFindInd.Value + 1 : 0;
+		Findling? nextFindling = getFindlingByInd(nextIndex);
 
 		if (nextFindling != null) {
+			currentFindInd = nextIndex;
+			clampCurrentFindInd();
 			buffer.column = nextFindling.Value.Start;
 			buffer.line = nextFindling.Value.line;
 			buffer.clampCursor();
 		}
 
 	}
-
 	public void moveToPrevFind() {
-		int totalFinds = 0;
-		foreach (var list in findlings) totalFinds += list.Count;
-		if (totalFinds == 0) return;
-
-		//wrap arorund backwards;
-		currentFindInd = (currentFindInd ?? 0) - 1;
-		currentFindInd = (currentFindInd + totalFinds) % totalFinds;
-
-		int test = currentFindInd ?? 0;
-		Findling? prevFindling = null;
-		for (int i = 0; i < findlings.Count; i++) {
-			if (test < findlings[i].Count) {
-				prevFindling = findlings[i][test];
-				break;
-			}
-			else {
-				test -= findlings[i].Count;
-			}
+		if (totalFinds == 0) {
+			return;
 		}
 
+		int prevIndex = currentFindInd.HasValue ? currentFindInd.Value - 1 : totalFinds - 1;
+		Findling? prevFindling = getFindlingByInd(prevIndex);
+
 		if (prevFindling != null) {
+			currentFindInd = prevIndex;
+			clampCurrentFindInd();
 			buffer.column = prevFindling.Value.Start;
 			buffer.line = prevFindling.Value.line;
 			buffer.clampCursor();
@@ -80,18 +88,26 @@ class Searcher {
 		isSearching = true;
 		searchedChars = chars;
 		searchFile();
+
 	}
 
 	public void clearSearch() {
 		isSearching = false;
 		searchedChars.Clear();
+		totalFinds = 0;
+		currentFindInd = null;
+		findlings.Clear();
 	}
 	public void searchFile() {
 		if (searchedChars.Count == 0) {
+			totalFinds = 0;
+			currentFindInd = null;
+			findlings.Clear();
 			return;
 		}
 
 		findlings.Clear();
+		totalFinds = 0;
 
 		for (int i = 0; i < buffer.lines.Count; i++) {
 			var lineFindlings = searchLine(i);
@@ -103,6 +119,13 @@ class Searcher {
 				findlings.Add(new List<Findling>());
 			}
 		}
+
+		foreach (var list in findlings) {
+			totalFinds += list.Count;
+		}
+
+		clampCurrentFindInd();
+
 	}
 	public List<Findling> searchLine(int lineInd) {
 		if (searchedChars.Count == 0) {
