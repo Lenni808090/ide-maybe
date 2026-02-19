@@ -1,3 +1,4 @@
+using System.Reflection.PortableExecutable;
 using Microsoft.VisualBasic;
 
 abstract class Action {
@@ -175,32 +176,23 @@ abstract class SelectionAction : Action {
 
 	protected SelectionAction(Buffer buffer) {
 		selectedArea = buffer.getSelectedArea();
-		deletedData = new List<List<char>>();
-		getDeletedData(selectedArea, buffer);
+		deletedData = buffer.getAreaData(
+			selectedArea.startLine,
+			selectedArea.endLine,
+			selectedArea.startColumn,
+			selectedArea.endColumn
+		);
 	}
 
-	protected void getDeletedData((int startLine, int endLine, int startColumn, int endColumn) selectedArea, Buffer buffer) {
-		for (int i = selectedArea.startLine; i <= selectedArea.endLine; i++) {
-			if (i == selectedArea.startLine) {
-				List<char> firstCopiedLine = new List<char>();
-				if (selectedArea.startLine == selectedArea.endLine) {
-					firstCopiedLine = buffer.lines[selectedArea.startLine]
-						.GetRange(selectedArea.startColumn, selectedArea.endColumn - selectedArea.startColumn);
-				}
-				else {
-					firstCopiedLine = buffer.lines[selectedArea.startLine]
-						.GetRange(selectedArea.startColumn, buffer.lines[selectedArea.startLine].Count - selectedArea.startColumn);
-				}
-				deletedData.Add(firstCopiedLine);
-			}
-			else if (i == selectedArea.endLine) {
-				List<char> lastLineCopied = buffer.lines[selectedArea.endLine].GetRange(0, selectedArea.endColumn);
-				deletedData.Add(lastLineCopied);
-			}
-			else {
-				deletedData.Add(new List<char>(buffer.lines[i]));
-			}
-		}
+	internal static void removeAreaAndSetCursor(
+		Buffer buffer,
+		(int startLine, int endLine, int startColumn, int endColumn) area
+	) {
+		buffer.removeArea(area.startLine, area.endLine, area.startColumn, area.endColumn);
+		buffer.line = area.startLine;
+		buffer.column = area.startColumn;
+		buffer.prefColumn = buffer.column;
+		buffer.clampCursor();
 	}
 }
 
@@ -209,8 +201,7 @@ class DeleteWhileSelecting : SelectionAction {
 	public DeleteWhileSelecting(Buffer buffer) : base(buffer) { }
 
 	public override void Redo(Buffer buffer) {
-		buffer.setSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
-		buffer.removeSelectedArea();
+		removeAreaAndSetCursor(buffer, selectedArea);
 		buffer.stopSelecting();
 	}
 
@@ -228,9 +219,8 @@ class NewLineWhileSelecting : SelectionAction {
 	}
 
 	public override void Redo(Buffer buffer) {
-		buffer.setSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
 		buffer.newLineAtPos(selectedArea.endLine, selectedArea.endColumn);
-		buffer.removeSelectedArea();
+		removeAreaAndSetCursor(buffer, selectedArea);
 		buffer.stopSelecting();
 	}
 
@@ -253,8 +243,7 @@ class InsertCharWhileSelecting : SelectionAction {
 	}
 
 	public override void Redo(Buffer buffer) {
-		buffer.setSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
-		buffer.removeSelectedArea();
+		removeAreaAndSetCursor(buffer, selectedArea);
 		buffer.stopSelecting();
 		buffer.insertCharAtPos(insertedChar, columnPos, linePos);
 	}
@@ -294,18 +283,58 @@ class PasteDataWhileSelecting : SelectionAction {
 	}
 
 	public override void Redo(Buffer buffer) {
-		buffer.setSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
-		buffer.removeSelectedArea();
+		removeAreaAndSetCursor(buffer, selectedArea);
 		buffer.stopSelecting();
 		buffer.insertLinesAtPos(linePos, columnPos, pastedData);
 	}
 
 	public override void Undo(Buffer buffer) {
-		buffer.setSelectedArea(pastedArea.startLine, pastedArea.endLine, pastedArea.startColumn, pastedArea.endColumn);
-		buffer.removeSelectedArea();
+		removeAreaAndSetCursor(buffer, pastedArea);
 		buffer.stopSelecting();
 		buffer.insertLinesAtPos(selectedArea.startLine, selectedArea.startColumn, deletedData);
 		buffer.setSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
+	}
+}
+
+
+
+class ReplaceWordAction : Action {
+
+	int line;
+	int start;
+	int length;
+
+	List<char> oldChars;
+	List<char> newChars;
+
+	public ReplaceWordAction(int start, int length, int line, List<char> newChars, Buffer buffer) {
+		this.start = start;
+		this.length = length;
+		this.line = line;
+		this.newChars = newChars;
+		oldChars = new();
+		getReplacedWord(buffer);
+	}
+
+
+	public void getReplacedWord(Buffer buffer) {
+		var oldCharsList = buffer.getAreaData(line, line, start, start + length);
+		oldChars = oldCharsList[0];
+	}
+	public override void Redo(Buffer buffer) {
+		buffer.removeArea(line, line, start, start + oldChars.Count);
+		buffer.insertCharsAtPos(line, start, newChars);
+		buffer.line = line;
+		buffer.column = start;
+		buffer.clampCursor();
+	}
+
+	public override void Undo(Buffer buffer) {
+		buffer.removeArea(line, line, start, start + newChars.Count);
+		buffer.insertCharsAtPos(line, start, oldChars);
+		buffer.line = line;
+		buffer.column = start;
+		buffer.clampCursor();
 	}
 }
 
@@ -341,8 +370,7 @@ class PasteDataAction : Action {
 	}
 
 	public override void Undo(Buffer buffer) {
-		buffer.setSelectedArea(pastedArea.startLine, pastedArea.endLine, pastedArea.startColumn, pastedArea.endColumn);
-		buffer.removeSelectedArea();
+		SelectionAction.removeAreaAndSetCursor(buffer, pastedArea);
 		buffer.stopSelecting();
 	}
 }

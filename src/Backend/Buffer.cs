@@ -173,31 +173,36 @@ class Buffer {
 		return (startLine, endLine, startColumn, endColumn);
 	}
 
-	public async Task copyLines() {
-		if (isSelecting) {
-			List<List<char>> copiedLines = new List<List<char>>();
+	public List<List<char>> getAreaData(int startLine, int endLine, int startColumn, int endColumn) {
+		List<List<char>> areaData = new List<List<char>>();
 
-			var (startLineCopy, endLineCopy, startColumnCopy, endColumnCopy) = getSelectedArea();
-
-			for (int i = startLineCopy; i <= endLineCopy; i++) {
-				if (i == startLineCopy) {
-					List<char> firstCopiedLine = new List<char>();
-					if (startLineCopy == endLineCopy) {
-						firstCopiedLine = lines[startLineCopy].GetRange(startColumnCopy, endColumnCopy - startColumnCopy);
-					}
-					else {
-						firstCopiedLine = lines[startLineCopy].GetRange(startColumnCopy, lines[startLineCopy].Count - startColumnCopy);
-					}
-					copiedLines.Add(firstCopiedLine);
-				}
-				else if (i == endLineCopy) {
-					List<char> lastLineCopied = lines[endLineCopy].GetRange(0, endColumnCopy);
-					copiedLines.Add(lastLineCopied);
+		for (int i = startLine; i <= endLine; i++) {
+			if (i == startLine) {
+				List<char> firstLineData = new List<char>();
+				if (startLine == endLine) {
+					firstLineData = lines[startLine].GetRange(startColumn, endColumn - startColumn);
 				}
 				else {
-					copiedLines.Add(new List<char>(lines[i]));
+					firstLineData = lines[startLine].GetRange(startColumn, lines[startLine].Count - startColumn);
 				}
+				areaData.Add(firstLineData);
 			}
+			else if (i == endLine) {
+				List<char> lastLineData = lines[endLine].GetRange(0, endColumn);
+				areaData.Add(lastLineData);
+			}
+			else {
+				areaData.Add(new List<char>(lines[i]));
+			}
+		}
+
+		return areaData;
+	}
+
+	public async Task copyLines() {
+		if (isSelecting) {
+			var (startLineCopy, endLineCopy, startColumnCopy, endColumnCopy) = getSelectedArea();
+			List<List<char>> copiedLines = getAreaData(startLineCopy, endLineCopy, startColumnCopy, endColumnCopy);
 
 			string copiedLinesString = "";
 
