@@ -319,7 +319,7 @@ class ReplaceWordAction : Action {
 
 	public void getReplacedWord(Buffer buffer) {
 		var oldCharsList = buffer.getAreaData(line, line, start, start + length);
-		oldChars = oldCharsList[0];
+		oldChars = new List<char>(oldCharsList[0]);
 	}
 	public override void Redo(Buffer buffer) {
 		buffer.removeArea(line, line, start, start + oldChars.Count);

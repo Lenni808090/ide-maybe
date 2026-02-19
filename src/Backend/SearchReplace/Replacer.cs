@@ -18,14 +18,18 @@ class Replacer {
 
 	public void replaceCurrentFindling() {
 		if (searcher.currentFindInd == null) return;
-		Findling? currentFindling = searcher.getFindlingByInd(searcher.currentFindInd.Value);
-		if (currentFindling == null) return;
+		var currentFindlingData = searcher.getCurrentFindlingData();
+		if (currentFindlingData == null) return;
+		int start = currentFindlingData.Value.start;
+		int length = currentFindlingData.Value.length;
+		int line = currentFindlingData.Value.line;
+
 		searcher.removeFindlingByInd(searcher.currentFindInd.Value);
-		buffer.removeArea(currentFindling.Value.line, currentFindling.Value.line, currentFindling.Value.Start, currentFindling.Value.Start + currentFindling.Value.Length);
-		buffer.insertCharsAtPos(currentFindling.Value.line, currentFindling.Value.Start, charsUsedToReplace);
+		buffer.removeArea(line, line, start, start + length);
+		buffer.insertCharsAtPos(line, start, charsUsedToReplace);
 		searcher.searchFile();
-		buffer.line = currentFindling.Value.line;
-		buffer.column = currentFindling.Value.Start;
+		buffer.line = line;
+		buffer.column = start;
 		buffer.clampCursor();
 	}
 
@@ -42,6 +46,6 @@ class Replacer {
 	}
 
 	public void setCharsUsedToReplace(List<char> chars) {
-		charsUsedToReplace = chars;
+		charsUsedToReplace = new List<char>(chars);
 	}
 }

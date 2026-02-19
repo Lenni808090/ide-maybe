@@ -387,6 +387,9 @@ class Editor {
 					replacer.replaceAllFindilngs();
 				}
 				else {
+					var findlingData = searcher.getCurrentFindlingData();
+					if (findlingData == null) return;
+					redoUndoHandler.addActionToUndo(new ReplaceWordAction(findlingData.Value.start, findlingData.Value.length, findlingData.Value.line, replacer.charsUsedToReplace, buffer));
 					replacer.replaceCurrentFindling();
 				}
 			}

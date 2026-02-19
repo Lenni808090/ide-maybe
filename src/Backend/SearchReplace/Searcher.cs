@@ -28,6 +28,15 @@ class Searcher {
 
 		currentFindInd = normalizeIndex(currentFindInd ?? 0, totalFinds);
 	}
+	public (int start, int length, int line)? getCurrentFindlingData() {
+		Findling? currentFindling = getFindlingByInd(currentFindInd ?? 0);
+		if (currentFindling == null) return null;
+		int start = currentFindling.Value.Start;
+		int length = currentFindling.Value.Length;
+		int line = currentFindling.Value.line;
+
+		return (start, length, line);
+	}
 	public Findling? getFindlingByInd(int findlingInd) {
 		if (totalFinds == 0) {
 			return null;
