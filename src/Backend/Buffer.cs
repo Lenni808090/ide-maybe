@@ -75,31 +75,33 @@ class Buffer {
 
 	public void removeSelectedArea() {
 		var (startLineSelect, endLineSelect, startColumnSelect, endColumnSelect) = getSelectedArea();
-		int firstLineRemovalCount;
-		if (startLineSelect == endLineSelect) {
-			firstLineRemovalCount = endColumnSelect - startColumnSelect;
-		}
-		else {
-			firstLineRemovalCount = lines[startLineSelect].Count - startColumnSelect;
-		}
-		lines[startLineSelect].RemoveRange(startColumnSelect, firstLineRemovalCount);
-
-		if (startLineSelect == endLineSelect) {
-			column = startColumnSelect;
-			clampCursor();
-			return;
-		}
-
-		var toBeMerged = lines[endLineSelect].GetRange(endColumnSelect, lines[endLineSelect].Count - endColumnSelect);
-		//beggining from behind because of shifting indeces
-		for (int i = endLineSelect; i > startLineSelect; i--) {
-			lines.RemoveAt(i);
-		}
-		lines[startLineSelect].AddRange(toBeMerged);
+		removeArea(startLineSelect, endLineSelect, startColumnSelect, endColumnSelect);
 		line = startLineSelect;
 		column = startColumnSelect;
 		prefColumn = column;
 		clampCursor();
+	}
+
+	public void removeArea(int startLine, int endLine, int startColumn, int endColumn) {
+		int firstLineRemovalCount;
+		if (startLine == endLine) {
+			firstLineRemovalCount = endColumn - startColumn;
+		}
+		else {
+			firstLineRemovalCount = lines[startLine].Count - startColumn;
+		}
+		lines[startLine].RemoveRange(startColumn, firstLineRemovalCount);
+
+		if (startLine == endLine) {
+			return;
+		}
+
+		var toBeMerged = lines[endLine].GetRange(endColumn, lines[endLine].Count - endColumn);
+		//beggining from behind because of shifting indeces
+		for (int i = endLine; i > startLine; i--) {
+			lines.RemoveAt(i);
+		}
+		lines[startLine].AddRange(toBeMerged);
 	}
 
 	public void insertAtSelectedArea(List<List<char>> linesToInsertWithTab) {

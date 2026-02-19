@@ -6,7 +6,7 @@ class Searcher {
 	public List<char> searchedChars;
 	int totalFinds = 0;
 
-	int? currentFindInd = null;
+	public int? currentFindInd = null;
 	public List<List<Findling>> findlings;
 
 	public Searcher(Buffer buffer) {
