@@ -363,9 +363,14 @@ class Editor {
 		}
 		else if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)) {
 			if (keyInfo.Key == ConsoleKey.H) {
-				replacer.clearReplace();
-				replacer.isReplacing = true;
-				searchInputMode = SearchInputMode.Search;
+				if (replacer.isReplacing) {
+					searchInputMode = searchInputMode == SearchInputMode.Search ? SearchInputMode.Replace : SearchInputMode.Search;
+				}
+				else {
+					replacer.clearReplace();
+					replacer.isReplacing = true;
+					searchInputMode = SearchInputMode.Replace;
+				}
 			}
 		}
 		else if (keyInfo.Key == ConsoleKey.Enter) {
