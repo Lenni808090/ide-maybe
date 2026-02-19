@@ -384,6 +384,7 @@ class Editor {
 			}
 			else if (searchInputMode == SearchInputMode.Replace) {
 				if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Shift)) {
+					redoUndoHandler.addActionToUndo(new ReplaceAllWordsAction(searcher.findlings, buffer, replacer.charsUsedToReplace));
 					replacer.replaceAllFindilngs();
 				}
 				else {

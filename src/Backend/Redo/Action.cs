@@ -311,7 +311,7 @@ class ReplaceWordAction : Action {
 		this.start = start;
 		this.length = length;
 		this.line = line;
-		this.newChars = newChars;
+		this.newChars = new List<char>(newChars);
 		oldChars = new();
 		getReplacedWord(buffer);
 	}
@@ -338,6 +338,40 @@ class ReplaceWordAction : Action {
 	}
 }
 
+
+class ReplaceAllWordsAction : Action {
+
+	List<List<Findling>> findlings;
+	List<ReplaceWordAction> replaceWordsActions;
+	List<char> newChars;
+	public ReplaceAllWordsAction(List<List<Findling>> findlings, Buffer buffer, List<char> newChars) {
+		this.findlings = new List<List<Findling>>(findlings);
+		replaceWordsActions = new();
+		this.newChars = new List<char>(newChars);
+		getReplacedWordActionList(buffer);
+	}
+
+
+	public void getReplacedWordActionList(Buffer buffer) {
+		List<Findling> flattenedFindlingList = new();
+		flattenedFindlingList.AddRange(findlings.SelectMany(f => f).ToList());
+		foreach (Findling findling in flattenedFindlingList) {
+			replaceWordsActions.Add(new ReplaceWordAction(findling.Start, findling.Length, findling.line, newChars, buffer));
+		}
+	}
+
+	public override void Redo(Buffer buffer) {
+		for (int i = replaceWordsActions.Count - 1; i >= 0; i--) {
+			replaceWordsActions[i].Redo(buffer);
+		}
+	}
+
+	public override void Undo(Buffer buffer) {
+		for (int i = 0; i < replaceWordsActions.Count; i++) {
+			replaceWordsActions[i].Undo(buffer);
+		}
+	}
+}
 
 class PasteDataAction : Action {
 	int columnPos;
