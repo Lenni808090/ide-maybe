@@ -1,9 +1,12 @@
 public enum SearchInputMode {
-    Search,
-    Replace,
+	Search,
+	Replace,
 }
 
-public enum EditModes {
-    FileExploring,
-    FileEditing,
+enum StatusBarMode {
+	Normal,
+	Search,
+
+	Warning,
 }
+

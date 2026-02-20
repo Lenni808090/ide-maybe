@@ -306,8 +306,9 @@ class Render {
 		PrintSection(topLine);
 	}
 
+
 	public void DrawStatusBar(SearchInputMode searchInputMode) {
-		var (filePath, fileData, column, line, statusBarMode, searchedChars, replaceChars, showReplace, isDirty) = statusBar.GetData();
+		var (filePath, fileData, column, line, statusBarMode, searchedChars, replaceChars, showReplace, isDirty, warningMessage) = statusBar.GetData();
 		int width = Console.WindowWidth;
 		if (width <= 0) return;
 
@@ -334,6 +335,17 @@ class Render {
 				StatusBarLine,
 				width,
 				ConsoleColor.DarkBlue,
+				leftSegments,
+				rightSegment
+			);
+		}
+		else if (statusBarMode == StatusBarMode.Warning) {
+			leftSegments.Add(new StatusBarSegment($" [WARN] {warningMessage} ", ConsoleColor.Red));
+			rightSegment.BackgroundColor = ConsoleColor.DarkRed;
+			statusBarRenderer.Draw(
+				StatusBarLine,
+				width,
+				ConsoleColor.DarkRed,
 				leftSegments,
 				rightSegment
 			);

@@ -12,6 +12,7 @@ class EditorState : State {
 	StateManager stateManager;
 	SearchInputMode searchInputMode = SearchInputMode.Search;
 	bool currInSearchMode = false;
+	bool warned;
 	List<char> typedSearchedChar;
 	List<char> typedReplaceChar;
 
@@ -32,11 +33,17 @@ class EditorState : State {
 
 
 	override public async Task handleInput(ConsoleKeyInfo keyInfo) {
+		bool isCtrlO = keyInfo.Key == ConsoleKey.O && keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control);
+		if (warned && !isCtrlO) {
+			warned = false;
+			statusBar.ClearWarning();
+		}
 
 		if (keyInfo.Key == ConsoleKey.Q && keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)) {
 			stateManager.SwitchState(ProgrammState.CLosed);
 			return;
 		}
+
 
 
 		// early returen if searchin
@@ -57,6 +64,7 @@ class EditorState : State {
 
 			if (bufferedChars.Count > 1) {
 				HandlePaste(bufferedChars);
+				render.DrawStatusBar(searchInputMode);
 				return;
 			}
 			else {
@@ -75,6 +83,7 @@ class EditorState : State {
 				else {
 					render.PrintLine(buffer.line, false);
 				}
+				render.DrawStatusBar(searchInputMode);
 				return;
 			}
 		}
@@ -259,6 +268,8 @@ class EditorState : State {
 			else if (keyInfo.Key == ConsoleKey.A) {
 				stateManager.SaveCurrentFile(buffer.lines);
 				redoUndoHandler.MarkSaved();
+				warned = false;
+				statusBar.ClearWarning();
 			}
 			else if (keyInfo.Key == ConsoleKey.Z) {
 				redoUndoHandler.Undo();
@@ -294,7 +305,22 @@ class EditorState : State {
 				render.PrintScreen();
 			}
 			else if (keyInfo.Key == ConsoleKey.O) {
-				stateManager.SwitchState(ProgrammState.FileExplorer);
+				if (redoUndoHandler.IsitDirty()) {
+					if (warned) {
+						warned = false;
+						statusBar.ClearWarning();
+						stateManager.SwitchState(ProgrammState.FileExplorer);
+					}
+					else {
+						statusBar.SetWarning("Changes not Saved. Save before switching file.  [CTRL + A] for Save [CTRL + O] to Lose");
+						warned = true;
+					}
+				}
+				else {
+					warned = false;
+					statusBar.ClearWarning();
+					stateManager.SwitchState(ProgrammState.FileExplorer);
+				}
 			}
 		}
 		else if (keyInfo.Key == ConsoleKey.Tab) {

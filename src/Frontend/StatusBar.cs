@@ -13,6 +13,7 @@ class StatusBar {
 	string search = "";
 	bool showReplace;
 	bool IsitDirty;
+	string warningMessage = "";
 	string replace = "";
 	int line;
 	int column;
@@ -32,10 +33,20 @@ class StatusBar {
 		this.fileData = new FileData("", "0 KB", "Unknown");
 	}
 
-	public (string filePath, FileData fileData, int column, int line, StatusBarMode statusBarMode, string searchedChars, string replaceChars, bool showReplace, bool IsitDirty) GetData() {
+	public (string filePath, FileData fileData, int column, int line, StatusBarMode statusBarMode, string searchedChars, string replaceChars, bool showReplace, bool IsitDirty, string warningMessage) GetData() {
 		UpdateStatusBar();
 
-		return (filePath, fileData, column, line, statusBarMode, search, replace, showReplace, IsitDirty);
+		return (filePath, fileData, column, line, statusBarMode, search, replace, showReplace, IsitDirty, warningMessage);
+	}
+
+	public void SetWarning(string message) {
+		warningMessage = message ?? "";
+		statusBarMode = StatusBarMode.Warning;
+	}
+
+	public void ClearWarning() {
+		warningMessage = "";
+		statusBarMode = StatusBarMode.Normal;
 	}
 
 	public void UpdateStatusBar() {
@@ -59,6 +70,11 @@ class StatusBar {
 				showReplace = false;
 				replace = "";
 			}
+		}
+		else if (statusBarMode == StatusBarMode.Warning) {
+			search = "";
+			replace = "";
+			showReplace = false;
 		}
 	}
 
@@ -98,10 +114,4 @@ class StatusBar {
 }
 
 public record FileData(string Extension, string FileSize, string Encoding);
-
-enum StatusBarMode {
-	Normal,
-	Search,
-
-}
 

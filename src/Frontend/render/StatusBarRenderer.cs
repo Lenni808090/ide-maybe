@@ -1,6 +1,6 @@
 class StatusBarSegment {
 	public string Text { get; }
-	public ConsoleColor BackgroundColor { get; }
+	public ConsoleColor BackgroundColor { get; set; }
 	public ConsoleColor ForegroundColor { get; }
 
 	public StatusBarSegment(
@@ -68,6 +68,14 @@ class StatusBarRenderer {
 
 		Console.BackgroundColor = ConsoleColor.Black;
 		Console.ForegroundColor = ConsoleColor.White;
+	}
+
+	public void DrawWarning(int statusBarLine, int width, string message) {
+		Console.SetCursorPosition(0, statusBarLine);
+		Console.BackgroundColor = ConsoleColor.Red;
+		Console.ForegroundColor = ConsoleColor.White;
+		Console.Write("\x1b[K");
+		Console.Write(message);
 	}
 }
 
