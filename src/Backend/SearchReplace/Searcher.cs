@@ -15,21 +15,21 @@ class Searcher {
 		searchedChars = new List<char>();
 	}
 
-	private static int normalizeIndex(int index, int count) {
+	private static int NormalizeIndex(int index, int count) {
 		return ((index % count) + count) % count;
 	}
 
 
-	public void clampCurrentFindInd() {
+	public void ClampCurrentFindInd() {
 		if (totalFinds == 0) {
 			currentFindInd = null;
 			return;
 		}
 
-		currentFindInd = normalizeIndex(currentFindInd ?? 0, totalFinds);
+		currentFindInd = NormalizeIndex(currentFindInd ?? 0, totalFinds);
 	}
-	public (int start, int length, int line)? getCurrentFindlingData() {
-		Findling? currentFindling = getFindlingByInd(currentFindInd ?? 0);
+	public (int start, int length, int line)? GetCurrentFindlingData() {
+		Findling? currentFindling = GetFindlingByInd(currentFindInd ?? 0);
 		if (currentFindling == null) return null;
 		int start = currentFindling.Value.Start;
 		int length = currentFindling.Value.Length;
@@ -37,12 +37,12 @@ class Searcher {
 
 		return (start, length, line);
 	}
-	public Findling? getFindlingByInd(int findlingInd) {
+	public Findling? GetFindlingByInd(int findlingInd) {
 		if (totalFinds == 0) {
 			return null;
 		}
 
-		findlingInd = normalizeIndex(findlingInd, totalFinds);
+		findlingInd = NormalizeIndex(findlingInd, totalFinds);
 
 		int test = findlingInd;
 		Findling? findling = null;
@@ -59,16 +59,16 @@ class Searcher {
 		return findling;
 	}
 
-	public void calculateTotalFindlings() {
+	public void CalculateTotalFindlings() {
 		totalFinds = 0;
 		foreach (var list in findlings) {
 			totalFinds += list.Count;
 		}
 	}
 
-	public void removeFindlingByInd(int findlingInd) {
+	public void RemoveFindlingByInd(int findlingInd) {
 
-		findlingInd = normalizeIndex(findlingInd, totalFinds);
+		findlingInd = NormalizeIndex(findlingInd, totalFinds);
 
 		int test = findlingInd;
 
@@ -82,58 +82,58 @@ class Searcher {
 			}
 		}
 
-		calculateTotalFindlings();
+		CalculateTotalFindlings();
 	}
-	public void moveToNextFind() {
+	public void MoveToNextFind() {
 		if (totalFinds == 0) {
 			return;
 		}
 
 		int nextIndex = currentFindInd.HasValue ? currentFindInd.Value + 1 : 0;
-		Findling? nextFindling = getFindlingByInd(nextIndex);
+		Findling? nextFindling = GetFindlingByInd(nextIndex);
 
 		if (nextFindling != null) {
 			currentFindInd = nextIndex;
-			clampCurrentFindInd();
+			ClampCurrentFindInd();
 			buffer.column = nextFindling.Value.Start;
 			buffer.line = nextFindling.Value.line;
-			buffer.clampCursor();
+			buffer.ClampCursor();
 		}
 
 	}
-	public void moveToPrevFind() {
+	public void MoveToPrevFind() {
 		if (totalFinds == 0) {
 			return;
 		}
 
 		int prevIndex = currentFindInd.HasValue ? currentFindInd.Value - 1 : totalFinds - 1;
-		Findling? prevFindling = getFindlingByInd(prevIndex);
+		Findling? prevFindling = GetFindlingByInd(prevIndex);
 
 		if (prevFindling != null) {
 			currentFindInd = prevIndex;
-			clampCurrentFindInd();
+			ClampCurrentFindInd();
 			buffer.column = prevFindling.Value.Start;
 			buffer.line = prevFindling.Value.line;
-			buffer.clampCursor();
+			buffer.ClampCursor();
 		}
 	}
 
 
-	public void setSearch(List<char> chars) {
+	public void SetSearch(List<char> chars) {
 		isSearching = true;
 		searchedChars = chars;
-		searchFile();
+		SearchFile();
 
 	}
 
-	public void clearSearch() {
+	public void ClearSearch() {
 		isSearching = false;
 		searchedChars.Clear();
 		totalFinds = 0;
 		currentFindInd = null;
 		findlings.Clear();
 	}
-	public void searchFile() {
+	public void SearchFile() {
 		if (searchedChars.Count == 0) {
 			totalFinds = 0;
 			currentFindInd = null;
@@ -144,7 +144,7 @@ class Searcher {
 		findlings.Clear();
 
 		for (int i = 0; i < buffer.lines.Count; i++) {
-			var lineFindlings = searchLine(i);
+			var lineFindlings = SearchLine(i);
 
 			if (lineFindlings.Count > 0) {
 				findlings.Add(lineFindlings);
@@ -153,11 +153,11 @@ class Searcher {
 				findlings.Add(new List<Findling>());
 			}
 		}
-		calculateTotalFindlings();
-		clampCurrentFindInd();
+		CalculateTotalFindlings();
+		ClampCurrentFindInd();
 
 	}
-	public List<Findling> searchLine(int lineInd) {
+	public List<Findling> SearchLine(int lineInd) {
 		if (searchedChars.Count == 0) {
 			return new List<Findling>();
 		}
@@ -195,3 +195,4 @@ class Searcher {
 		return findlings;
 	}
 }
+

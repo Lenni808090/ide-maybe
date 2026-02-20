@@ -24,31 +24,31 @@ class Buffer {
 		{ '{', '}' },
 		{ '"', '"' },
 	};
-	public void setSelectedArea(int startLine, int endLine, int startColumn, int endColumn) {
+	public void SetSelectedArea(int startLine, int endLine, int startColumn, int endColumn) {
 		startSelection.startLine = startLine;
 		startSelection.startColumn = startColumn;
 		endSelection.endLine = endLine;
 		endSelection.endColumn = endColumn;
 		isSelecting = true;
 	}
-	public void startSelecting() {
+	public void StartSelecting() {
 		isSelecting = true;
 		startSelection = (line, column);
 	}
 
-	public void updateSelection() {
+	public void UpdateSelection() {
 		if (isSelecting) {
 			endSelection = (line, column);
 		}
 	}
 
-	public void stopSelecting() {
+	public void StopSelecting() {
 		isSelecting = false;
 		startSelection = (0, 0);
 		endSelection = (0, 0);
 	}
 
-	public List<List<char>> convertTabsToSpace(List<List<char>> linesWithTab) {
+	public List<List<char>> ConvertTabsToSpace(List<List<char>> linesWithTab) {
 		List<List<char>> linesWithSpaces = new List<List<char>>();
 		foreach (List<char> lineWithTab in linesWithTab) {
 			linesWithSpaces.Add(new List<char>());
@@ -63,26 +63,26 @@ class Buffer {
 		}
 		return linesWithSpaces;
 	}
-	public void pasteData(List<List<char>> pasteDataLines) {
+	public void PasteData(List<List<char>> pasteDataLines) {
 		if (isSelecting) {
-			insertAtSelectedArea(pasteDataLines);
-			stopSelecting();
+			InsertAtSelectedArea(pasteDataLines);
+			StopSelecting();
 		}
 		else {
-			insertLinesAtPos(line, column, pasteDataLines);
+			InsertLinesAtPos(line, column, pasteDataLines);
 		}
 	}
 
-	public void removeSelectedArea() {
-		var (startLineSelect, endLineSelect, startColumnSelect, endColumnSelect) = getSelectedArea();
-		removeArea(startLineSelect, endLineSelect, startColumnSelect, endColumnSelect);
+	public void RemoveSelectedArea() {
+		var (startLineSelect, endLineSelect, startColumnSelect, endColumnSelect) = GetSelectedArea();
+		RemoveArea(startLineSelect, endLineSelect, startColumnSelect, endColumnSelect);
 		line = startLineSelect;
 		column = startColumnSelect;
 		prefColumn = column;
-		clampCursor();
+		ClampCursor();
 	}
 
-	public void removeArea(int startLine, int endLine, int startColumn, int endColumn) {
+	public void RemoveArea(int startLine, int endLine, int startColumn, int endColumn) {
 		int firstLineRemovalCount;
 		if (startLine == endLine) {
 			firstLineRemovalCount = endColumn - startColumn;
@@ -104,20 +104,20 @@ class Buffer {
 		lines[startLine].AddRange(toBeMerged);
 	}
 
-	public void insertAtSelectedArea(List<List<char>> linesToInsertWithTab) {
-		removeSelectedArea();
-		insertLinesAtPos(line, column, linesToInsertWithTab);
+	public void InsertAtSelectedArea(List<List<char>> linesToInsertWithTab) {
+		RemoveSelectedArea();
+		InsertLinesAtPos(line, column, linesToInsertWithTab);
 	}
 
 
-	public void insertCharsAtPos(int linePos, int columnPos, List<char> charsToInsert) {
+	public void InsertCharsAtPos(int linePos, int columnPos, List<char> charsToInsert) {
 		if (charsToInsert.Count == 0) return;
 		lines[linePos].InsertRange(columnPos, charsToInsert);
 	}
 
-	public void insertLinesAtPos(int linePos, int columnPos, List<List<char>> linesToInsertWithTab) {
+	public void InsertLinesAtPos(int linePos, int columnPos, List<List<char>> linesToInsertWithTab) {
 		if (linesToInsertWithTab.Count == 0) return;
-		var linesToInsert = convertTabsToSpace(linesToInsertWithTab);
+		var linesToInsert = ConvertTabsToSpace(linesToInsertWithTab);
 		int originalColumn = columnPos;
 
 		List<char> remainingLine = lines[linePos].Slice(columnPos, lines[linePos].Count - columnPos);
@@ -150,7 +150,7 @@ class Buffer {
 		prefColumn = column;
 	}
 
-	public (int startLine, int endLine, int startColumn, int endColumn) getSelectedArea() {
+	public (int startLine, int endLine, int startColumn, int endColumn) GetSelectedArea() {
 		int startLine = Math.Min(startSelection.startLine, endSelection.endLine);
 		int endLine = Math.Max(startSelection.startLine, endSelection.endLine);
 
@@ -173,7 +173,7 @@ class Buffer {
 		return (startLine, endLine, startColumn, endColumn);
 	}
 
-	public List<List<char>> getAreaData(int startLine, int endLine, int startColumn, int endColumn) {
+	public List<List<char>> GetAreaData(int startLine, int endLine, int startColumn, int endColumn) {
 		List<List<char>> areaData = new List<List<char>>();
 
 		for (int i = startLine; i <= endLine; i++) {
@@ -199,10 +199,10 @@ class Buffer {
 		return areaData;
 	}
 
-	public async Task copyLines() {
+	public async Task CopyLines() {
 		if (isSelecting) {
-			var (startLineCopy, endLineCopy, startColumnCopy, endColumnCopy) = getSelectedArea();
-			List<List<char>> copiedLines = getAreaData(startLineCopy, endLineCopy, startColumnCopy, endColumnCopy);
+			var (startLineCopy, endLineCopy, startColumnCopy, endColumnCopy) = GetSelectedArea();
+			List<List<char>> copiedLines = GetAreaData(startLineCopy, endLineCopy, startColumnCopy, endColumnCopy);
 
 			string copiedLinesString = "";
 
@@ -220,14 +220,14 @@ class Buffer {
 		}
 	}
 
-	public async Task cutLines() {
-		await copyLines();
-		removeSelectedArea();
-		stopSelecting();
+	public async Task CutLines() {
+		await CopyLines();
+		RemoveSelectedArea();
+		StopSelecting();
 	}
 
 
-	public int getPrevWhiteSpaces(int linePos) {
+	public int GetPrevWhiteSpaces(int linePos) {
 		int whiteSpaceCount = 0;
 		List<char> lastLine = lines[linePos];
 		foreach (char c in lastLine) {
@@ -243,7 +243,7 @@ class Buffer {
 
 
 
-	public bool isItTab() {
+	public bool IsItTab() {
 		if (column < 4) return false;
 
 		for (int i = column - 1; i >= column - 4; i--) {
@@ -255,14 +255,14 @@ class Buffer {
 	}
 
 
-	public void newLine() {
+	public void NewLine() {
 		if (isSelecting) {
-			var selectedArea = getSelectedArea();
+			var selectedArea = GetSelectedArea();
 			List<char> newLine = lines[selectedArea.endLine].Slice(selectedArea.endColumn, lines[selectedArea.endLine].Count - selectedArea.endColumn);
 			lines[selectedArea.endLine].RemoveRange(selectedArea.endColumn, lines[selectedArea.endLine].Count - selectedArea.endColumn);
-			int leadingWhiteSpaces = getPrevWhiteSpaces(selectedArea.startLine);
-			removeSelectedArea();
-			stopSelecting();
+			int leadingWhiteSpaces = GetPrevWhiteSpaces(selectedArea.startLine);
+			RemoveSelectedArea();
+			StopSelecting();
 			line = selectedArea.startLine + 1;
 			column = leadingWhiteSpaces;
 			prefColumn = column;
@@ -272,7 +272,7 @@ class Buffer {
 		else {
 			List<char> newLine = lines[line].Slice(column, lines[line].Count - column);
 			lines[line].RemoveRange(column, lines[line].Count - column);
-			int leadingWhiteSpaces = getPrevWhiteSpaces(line);
+			int leadingWhiteSpaces = GetPrevWhiteSpaces(line);
 			line++;
 			column = leadingWhiteSpaces;
 			prefColumn = column;
@@ -281,10 +281,10 @@ class Buffer {
 		}
 	}
 
-	public void newLineAtPos(int linePos, int columnPos) {
+	public void NewLineAtPos(int linePos, int columnPos) {
 		List<char> newLine = lines[linePos].Slice(columnPos, lines[linePos].Count - columnPos);
 		lines[linePos].RemoveRange(columnPos, lines[linePos].Count - columnPos);
-		int leadingWhiteSpaces = getPrevWhiteSpaces(linePos);
+		int leadingWhiteSpaces = GetPrevWhiteSpaces(linePos);
 		line = linePos + 1;
 		column = leadingWhiteSpaces;
 		prefColumn = leadingWhiteSpaces;
@@ -292,7 +292,7 @@ class Buffer {
 		lines[linePos + 1].AddRange(newLine);
 	}
 
-	public void newLineAtPosRaw(int linePos, int columnPos) {
+	public void NewLineAtPosRaw(int linePos, int columnPos) {
 		List<char> newLine = lines[linePos].Slice(columnPos, lines[linePos].Count - columnPos);
 		lines[linePos].RemoveRange(columnPos, lines[linePos].Count - columnPos);
 		lines.Insert(linePos + 1, new List<char>(newLine));
@@ -301,7 +301,7 @@ class Buffer {
 		prefColumn = 0;
 	}
 
-	public void mergeLinesAtPos(int linePos, int removeCharsFromNextLineStart = 0) {
+	public void MergeLinesAtPos(int linePos, int removeCharsFromNextLineStart = 0) {
 		if (linePos < 0) {
 			return;
 		}
@@ -321,7 +321,7 @@ class Buffer {
 		lines[linePos].AddRange(toAddLine);
 	}
 
-	public void moveUp() {
+	public void MoveUp() {
 		if (line == 0) {
 			if (column != 0) {
 				column = 0;
@@ -338,7 +338,7 @@ class Buffer {
 		}
 	}
 
-	public void moveDown() {
+	public void MoveDown() {
 		if (lines.Count == (line + 1)) {
 			column = lines[line].Count;
 			prefColumn = column;
@@ -353,7 +353,7 @@ class Buffer {
 		}
 	}
 
-	public void moveRight() {
+	public void MoveRight() {
 		if (column == lines[line].Count) {
 			if (lines.Count == (line + 1)) {
 				return;
@@ -370,16 +370,16 @@ class Buffer {
 	}
 
 
-	public void moveRightWhileSelecting() {
+	public void MoveRightWhileSelecting() {
 		if (isSelecting) {
-			var selectedArea = getSelectedArea();
+			var selectedArea = GetSelectedArea();
 			line = selectedArea.endLine;
 			column = selectedArea.endColumn;
 			prefColumn = column;
 		}
 	}
 
-	public void moveLeft() {
+	public void MoveLeft() {
 		if (column == 0) {
 			if (line == 0) {
 				return;
@@ -394,23 +394,23 @@ class Buffer {
 		}
 	}
 
-	public void moveLeftWhileSelecting() {
+	public void MoveLeftWhileSelecting() {
 		if (isSelecting) {
-			var selectedArea = getSelectedArea();
+			var selectedArea = GetSelectedArea();
 			line = selectedArea.startLine;
 			column = selectedArea.startColumn;
 			prefColumn = column;
 		}
 	}
 
-	public bool backspace() {
+	public bool Backspace() {
 		if (isSelecting) {
-			removeSelectedArea();
-			stopSelecting();
+			RemoveSelectedArea();
+			StopSelecting();
 			return true;
 		}
 		if (column > 0) {
-			if (isItTab()) {
+			if (IsItTab()) {
 				lines[line].RemoveRange(column - 4, 4);
 				column -= 4;
 				prefColumn = column;
@@ -444,7 +444,7 @@ class Buffer {
 		}
 	}
 
-	public void clampCursor() {
+	public void ClampCursor() {
 		if (column < 0) {
 			column = 0;
 		}
@@ -454,12 +454,12 @@ class Buffer {
 		prefColumn = column;
 	}
 
-	public void insertChar(char c) {
+	public void InsertChar(char c) {
 		if (isSelecting) {
-			removeSelectedArea();
-			int charPos = getSelectedArea().startColumn;
-			int linePos = getSelectedArea().startLine;
-			stopSelecting();
+			RemoveSelectedArea();
+			int charPos = GetSelectedArea().startColumn;
+			int linePos = GetSelectedArea().startLine;
+			StopSelecting();
 			lines[linePos].Insert(charPos, c);
 
 			column = charPos + 1;
@@ -471,15 +471,15 @@ class Buffer {
 			column++;
 			prefColumn = column;
 		}
-		clampCursor();
+		ClampCursor();
 	}
 
 
-	public void insertCharPair(char c) {
+	public void InsertCharPair(char c) {
 		if (isSelecting) {
-			var area = getSelectedArea();
+			var area = GetSelectedArea();
 
-			insertCharPairArroundSelection(
+			InsertCharPairAroundSelection(
 				c,
 				area.startColumn,
 				area.startLine,
@@ -488,66 +488,67 @@ class Buffer {
 			);
 		}
 		else {
-			insertCharPairAtPos(c, column, line);
+			InsertCharPairAtPos(c, column, line);
 		}
 
-		clampCursor();
+		ClampCursor();
 	}
 
 
-	public void insertCharPairArroundSelection(char c, int firstCharColumnPos, int firstCharlinePos, int secoundCharlinePos, int secoundCharColumnPos) {
+	public void InsertCharPairAroundSelection(char c, int firstCharColumnPos, int firstCharlinePos, int secoundCharlinePos, int secoundCharColumnPos) {
 		char secoundC = pairs[c];
 
-		insertCharAtPos(c, firstCharColumnPos, firstCharlinePos);
+		InsertCharAtPos(c, firstCharColumnPos, firstCharlinePos);
 		int endColumnPos = firstCharlinePos == secoundCharlinePos ? secoundCharColumnPos + 1 : secoundCharColumnPos;
-		insertCharAtPos(secoundC, endColumnPos, secoundCharlinePos);
-		setSelectedArea(firstCharlinePos, secoundCharlinePos, firstCharColumnPos + 1, endColumnPos);
+		InsertCharAtPos(secoundC, endColumnPos, secoundCharlinePos);
+		SetSelectedArea(firstCharlinePos, secoundCharlinePos, firstCharColumnPos + 1, endColumnPos);
 		line = firstCharlinePos;
 		column = firstCharColumnPos + 1;
 		prefColumn = column;
 	}
-	public void insertCharPairAtPos(char c, int columPos, int linePos) {
+	public void InsertCharPairAtPos(char c, int columPos, int linePos) {
 		char secoundC = pairs[c];
 
 		lines[linePos].Insert(columPos, c);
 		lines[linePos].Insert(columPos + 1, secoundC);
 		column = columPos + 1;
 		prefColumn = column;
-		clampCursor();
+		ClampCursor();
 	}
 
-	public void insertCharAtPos(char c, int columPos, int linePos) {
+	public void InsertCharAtPos(char c, int columPos, int linePos) {
 		lines[linePos].Insert(Math.Min(columPos, lines[linePos].Count), c);
 		column = columPos + 1;
 		prefColumn = column;
-		clampCursor();
+		ClampCursor();
 	}
 
-	public void removeCharAtPos(int columPos, int linePos) {
+	public void RemoveCharAtPos(int columPos, int linePos) {
 		lines[linePos].RemoveAt(Math.Min(columPos, lines[linePos].Count - 1));
 		column = columPos;
 		prefColumn = column;
-		clampCursor();
+		ClampCursor();
 	}
 
-	public void removeTabAtPos(int columPos, int linePos) {
+	public void RemoveTabAtPos(int columPos, int linePos) {
 		lines[linePos].RemoveRange(columPos - 4, 4);
 		column = columPos - 4;
 		prefColumn = column;
-		clampCursor();
+		ClampCursor();
 	}
-	public void insertTabAtPos(int columPos, int linePos, int count) {
-		clampCursor();
+	public void InsertTabAtPos(int columPos, int linePos, int count) {
+		ClampCursor();
 		lines[linePos].InsertRange(columPos, new string(' ', count));
 		column = columPos + count;
 		prefColumn = column;
-		clampCursor();
+		ClampCursor();
 	}
-	public void insertTab(int count) {
-		clampCursor();
+	public void InsertTab(int count) {
+		ClampCursor();
 		lines[line].InsertRange(column, new string(' ', count));
 		column += count;
 		prefColumn = column;
-		clampCursor();
+		ClampCursor();
 	}
 }
+

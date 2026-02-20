@@ -33,7 +33,7 @@ class Render {
 
 
 
-	public void resetView() {
+	public void ResetView() {
 		int h = ContentHeight;
 
 		int margin = Math.Min(5, h / 3);
@@ -58,33 +58,33 @@ class Render {
 	}
 
 
-	public void setCursor(int lineInd) {
-		Console.SetCursorPosition(getCursorXPos(lineInd), getScreenLine(lineInd));
+	public void SetCursor(int lineInd) {
+		Console.SetCursorPosition(GetCursorXPos(lineInd), GetScreenLine(lineInd));
 	}
 
-	public int getScreenLine(int lineInd) {
+	public int GetScreenLine(int lineInd) {
 		return lineInd - topLine;
 	}
 
-	public int getSpacesNeeded(int lineInd) {
+	public int GetSpacesNeeded(int lineInd) {
 		if (lineInd.ToString().Length >= currentDistFromEdge) {
 			currentDistFromEdge = lineInd.ToString().Length + 2;
 		}
 		return currentDistFromEdge - lineInd.ToString().Length;
 	}
 
-	public void printLineNumber(int lineInd) {
-		Console.SetCursorPosition(0, getScreenLine(lineInd));
+	public void PrintLineNumber(int lineInd) {
+		Console.SetCursorPosition(0, GetScreenLine(lineInd));
 		Console.ForegroundColor = ConsoleColor.DarkMagenta;
-		Console.Write(lineInd + new string(' ', getSpacesNeeded(lineInd)));
+		Console.Write(lineInd + new string(' ', GetSpacesNeeded(lineInd)));
 		Console.ForegroundColor = ConsoleColor.White;
 	}
 
-	public int getCursorXPos(int lineInd) {
-		return lineInd.ToString().Length + buffer.column + getSpacesNeeded(lineInd);
+	public int GetCursorXPos(int lineInd) {
+		return lineInd.ToString().Length + buffer.column + GetSpacesNeeded(lineInd);
 	}
 
-	public (int startLine, int endLine, int startColumn, int endColumn) getSelectedArea() {
+	public (int startLine, int endLine, int startColumn, int endColumn) GetSelectedArea() {
 		int startLine = Math.Min(buffer.startSelection.startLine, buffer.endSelection.endLine);
 		int endLine = Math.Max(buffer.startSelection.startLine, buffer.endSelection.endLine);
 
@@ -108,17 +108,17 @@ class Render {
 	}
 
 
-	public void printLine(int lineInd, bool completeRedraw) {
+	public void PrintLine(int lineInd, bool completeRedraw) {
 		Console.CursorVisible = false;
-		printLineNumber(lineInd);
+		PrintLineNumber(lineInd);
 		List<char> line = buffer.lines[lineInd];
 		List<Span> spans = new();
-		spans.AddRange(converter.convertTokensToSpans(simpleHighlighter.HighlightLine(line)));
+		spans.AddRange(converter.ConvertTokensToSpans(simpleHighlighter.HighlightLine(line)));
 		if (searcher.isSearching) {
-			spans.AddRange(converter.convertFindlingsToSpans(searcher.findlings[lineInd]));
+			spans.AddRange(converter.ConvertFindlingsToSpans(searcher.findlings[lineInd]));
 		}
 		if (buffer.isSelecting) {
-			var sel = getSelectedArea();
+			var sel = GetSelectedArea();
 
 			int startLine = sel.startLine;
 			int endLine = sel.endLine;
@@ -146,11 +146,11 @@ class Render {
 				selectStart = 0;
 				selectLength = line.Count;
 			}
-			spans.Add(converter.convertSelectionToSpan(selectStart, selectLength));
+			spans.Add(converter.ConvertSelectionToSpan(selectStart, selectLength));
 
 		}
 
-		bool isEmptySelected = buffer.isSelecting && line.Count == 0 && lineInd >= getSelectedArea().startLine && lineInd <= getSelectedArea().endLine;
+		bool isEmptySelected = buffer.isSelecting && line.Count == 0 && lineInd >= GetSelectedArea().startLine && lineInd <= GetSelectedArea().endLine;
 
 		if (isEmptySelected) {
 			Console.BackgroundColor = ConsoleColor.Cyan;
@@ -158,7 +158,7 @@ class Render {
 			Console.Write(" ");
 			Console.BackgroundColor = ConsoleColor.Black;
 			Console.Write("\x1b[K");
-			setCursor(lineInd);
+			SetCursor(lineInd);
 			if (!completeRedraw) Console.CursorVisible = true;
 			return;
 		}
@@ -188,32 +188,32 @@ class Render {
 		Console.BackgroundColor = ConsoleColor.Black;
 		Console.ForegroundColor = ConsoleColor.White;
 		Console.Write("\x1b[K");
-		setCursor(lineInd);
+		SetCursor(lineInd);
 		if (!completeRedraw) {
 			Console.CursorVisible = true;
 		}
 	}
 
-	public void printSection(int startLineInd) {
+	public void PrintSection(int startLineInd) {
 		for (int i = startLineInd; i < bottomLine; i++) {
-			printLine(i, true);
+			PrintLine(i, true);
 		}
 		if (bottomLine < ContentHeight) {
 			for (int i = bottomLine; i < ContentHeight; i++) {
-				Console.SetCursorPosition(0, getScreenLine(i));
+				Console.SetCursorPosition(0, GetScreenLine(i));
 				Console.Write("\x1b[K");
 			}
 		}
-		setCursor(buffer.line);
+		SetCursor(buffer.line);
 		Console.CursorVisible = true;
 	}
 
-	public void printScreen() {
-		printSection(topLine);
+	public void PrintScreen() {
+		PrintSection(topLine);
 	}
 
-	public void drawStatusBar(SearchInputMode searchInputMode) {
-		var (filePath, fileData, column, line, statusBarMode, searchedChars, replaceChars, showReplace) = statusBar.getData();
+	public void DrawStatusBar(SearchInputMode searchInputMode) {
+		var (filePath, fileData, column, line, statusBarMode, searchedChars, replaceChars, showReplace) = statusBar.GetData();
 		int width = Console.WindowWidth;
 		if (width <= 0) return;
 
@@ -260,10 +260,11 @@ class Render {
 			);
 		}
 
-		setCursor(buffer.line);
+		SetCursor(buffer.line);
 		Console.BackgroundColor = ConsoleColor.Black;
 		Console.ForegroundColor = ConsoleColor.White;
 		Console.CursorVisible = true;
 	}
 
 }
+

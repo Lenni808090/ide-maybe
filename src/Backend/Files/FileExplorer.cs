@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 
@@ -13,9 +14,9 @@ class FileExplorer {
 		currentDir = @"C:\";
 	}
 
-	public void moveToNextEntry() {
-		var dirInfo = getInfoAboutCurrentDir();
-		int totalEntryCount = getTotalEntriesCount(dirInfo.directoryInfos, dirInfo.fileInfos);
+	public void MoveToNextEntry() {
+		var dirInfo = GetInfoAboutCurrentDir();
+		int totalEntryCount = GetTotalEntriesCount(dirInfo.directoryInfos, dirInfo.fileInfos);
 		if (currentHoveredFile == totalEntryCount - 1) {
 			return;
 		}
@@ -23,15 +24,15 @@ class FileExplorer {
 	}
 
 
-	public void moveToPrevEntry() {
-		var dirInfo = getInfoAboutCurrentDir();
-		int totalEntryCount = getTotalEntriesCount(dirInfo.directoryInfos, dirInfo.fileInfos);
+	public void MoveToPrevEntry() {
+		var dirInfo = GetInfoAboutCurrentDir();
+		int totalEntryCount = GetTotalEntriesCount(dirInfo.directoryInfos, dirInfo.fileInfos);
 		if (currentHoveredFile == 0) {
 			return;
 		}
 		currentHoveredFile--;
 	}
-	public (List<DirectoryInfo> directoryInfos, List<FileInfo> fileInfos) getInfoAboutDir(string currentDir) {
+	public (List<DirectoryInfo> directoryInfos, List<FileInfo> fileInfos) GetInfoAboutDir(string currentDir) {
 		var currentDirInfo = new DirectoryInfo(currentDir);
 		List<DirectoryInfo> directoryInfos = new();
 		List<FileInfo> fileInfos = new();
@@ -48,19 +49,50 @@ class FileExplorer {
 		return (directoryInfos, fileInfos);
 	}
 
-	public (List<DirectoryInfo> directoryInfos, List<FileInfo> fileInfos) getInfoAboutCurrentDir() {
-		return getInfoAboutDir(currentDir);
+	public (bool isFile, FileSystemInfo systemInfo) GetEntryByInd(int entryInd) {
+		var currentDirInfo = GetInfoAboutCurrentDir();
+		int dirCount = currentDirInfo.directoryInfos.Count;
+		int fileCount = currentDirInfo.fileInfos.Count;
+		int total = dirCount + fileCount;
+
+		if (entryInd < 0 || entryInd >= total) {
+			throw new ArgumentOutOfRangeException(nameof(entryInd));
+		}
+
+		if (entryInd < dirCount) {
+			return (false, currentDirInfo.directoryInfos[entryInd]);
+		}
+
+		return (true, currentDirInfo.fileInfos[entryInd - dirCount]);
 	}
 
-	public int getTotalEntriesCount(List<DirectoryInfo> directoryInfos, List<FileInfo> fileInfos) {
+	public (bool isFile, string currentDir) MoveIntoEntry() {
+		var entryToMoveIn = GetEntryByInd(currentHoveredFile);
+		string entryPath = Path.Combine(currentDir, entryToMoveIn.systemInfo.Name);
+
+		if (entryToMoveIn.isFile) {
+			return (true, entryPath);
+		}
+
+		currentDir = entryPath;
+		currentHoveredFile = 0;
+		return (false, currentDir);
+	}
+
+	public (List<DirectoryInfo> directoryInfos, List<FileInfo> fileInfos) GetInfoAboutCurrentDir() {
+		return GetInfoAboutDir(currentDir);
+	}
+
+	public int GetTotalEntriesCount(List<DirectoryInfo> directoryInfos, List<FileInfo> fileInfos) {
 		return directoryInfos.Count + fileInfos.Count;
 	}
-	public void setBaseDir(string baseDir) {
+	public void SetBaseDir(string baseDir) {
 		this.baseDir = baseDir;
 	}
 
-	public void setCurrentDir(string currentDir) {
+	public void SetCurrentDir(string currentDir) {
 		this.currentDir = currentDir;
 	}
 
 }
+

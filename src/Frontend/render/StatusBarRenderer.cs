@@ -15,7 +15,7 @@ class StatusBarSegment {
 }
 
 class StatusBarRenderer {
-	private static string fit(string text, int maxLength) {
+	private static string Fit(string text, int maxLength) {
 		if (maxLength <= 0) return "";
 		if (text.Length <= maxLength) return text;
 		return text.Substring(0, maxLength);
@@ -30,7 +30,7 @@ class StatusBarRenderer {
 	) {
 		if (width <= 0) return;
 
-		string rightText = fit(rightSegment.Text, width);
+		string rightText = Fit(rightSegment.Text, width);
 		int rightStart = Math.Max(0, width - rightText.Length);
 
 		Console.SetCursorPosition(0, statusBarLine);
@@ -47,7 +47,7 @@ class StatusBarRenderer {
 				break;
 			}
 
-			string segmentText = fit(segment.Text, available);
+			string segmentText = Fit(segment.Text, available);
 			if (string.IsNullOrEmpty(segmentText)) {
 				continue;
 			}
@@ -70,3 +70,4 @@ class StatusBarRenderer {
 		Console.ForegroundColor = ConsoleColor.White;
 	}
 }
+

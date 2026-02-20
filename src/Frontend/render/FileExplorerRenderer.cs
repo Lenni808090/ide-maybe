@@ -3,7 +3,12 @@ class FileExplorerRenderer {
 	int topDirectoryInd;
 	int bottomDirectoryInd;
 	(List<DirectoryInfo> directoryInfos, List<FileInfo> fileInfos) currentDirInfo;
-	public void resetDirectoryView() {
+
+	public FileExplorerRenderer(FileExplorer fileExplorer) {
+		this.fileExplorer = fileExplorer;
+		UpdateCurrentDirInfo();
+	}
+	public void ResetDirectoryView() {
 		int h = Console.WindowHeight - 1;
 
 		int margin = Math.Min(5, h / 3);
@@ -18,42 +23,39 @@ class FileExplorerRenderer {
 		if (topDirectoryInd < 0) {
 			topDirectoryInd = 0;
 		}
-		updateCurrentDirInfo();
-		int maxTop = Math.Max(0, fileExplorer.getTotalEntriesCount(currentDirInfo.directoryInfos, currentDirInfo.fileInfos) - h);
+		int maxTop = Math.Max(0, fileExplorer.GetTotalEntriesCount(currentDirInfo.directoryInfos, currentDirInfo.fileInfos) - h);
 		if (topDirectoryInd > maxTop) {
 			topDirectoryInd = maxTop;
 		}
 
-		bottomDirectoryInd = Math.Min(topDirectoryInd + h, fileExplorer.getTotalEntriesCount(currentDirInfo.directoryInfos, currentDirInfo.fileInfos));
+		bottomDirectoryInd = Math.Min(topDirectoryInd + h, fileExplorer.GetTotalEntriesCount(currentDirInfo.directoryInfos, currentDirInfo.fileInfos));
 	}
 
-	public int getScreenLine(int i) {
+	public int GetScreenLine(int i) {
 		return i - topDirectoryInd;
 	}
 
-	public void updateCurrentDirInfo() {
-		currentDirInfo = fileExplorer.getInfoAboutCurrentDir();
-	}
-	public FileExplorerRenderer(FileExplorer fileExplorer) {
-		this.fileExplorer = fileExplorer;
+	public void UpdateCurrentDirInfo() {
+		currentDirInfo = fileExplorer.GetInfoAboutCurrentDir();
 	}
 
-	public void renderDirectroys() {
+	public void RenderDirectroys() {
 		for (int i = topDirectoryInd; i < bottomDirectoryInd; i++) {
-			Console.SetCursorPosition(0, getScreenLine(i));
+			Console.SetCursorPosition(0, GetScreenLine(i));
 			if (fileExplorer.currentHoveredFile == i) {
 				Console.BackgroundColor = ConsoleColor.Cyan;
 			}
 			else {
 				Console.BackgroundColor = ConsoleColor.Black;
 			}
-			if (i < currentDirInfo.directoryInfos.Count) {
+			var entry = fileExplorer.GetEntryByInd(i);
+			if (!entry.isFile) {
 				Console.ForegroundColor = ConsoleColor.DarkRed;
-				Console.Write(currentDirInfo.directoryInfos[i].Name + "/");
+				Console.Write(entry.systemInfo.Name + "/");
 			}
 			else {
 				Console.ForegroundColor = ConsoleColor.White;
-				Console.Write("-" + currentDirInfo.fileInfos[i - currentDirInfo.directoryInfos.Count].Name);
+				Console.Write("-" + entry.systemInfo.Name);
 			}
 			Console.ForegroundColor = ConsoleColor.Black;
 			Console.Write("\x1b[K");
@@ -62,3 +64,4 @@ class FileExplorerRenderer {
 	}
 
 }
+

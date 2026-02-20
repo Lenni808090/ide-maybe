@@ -34,18 +34,18 @@ class Editor {
 
 		Console.CancelKeyPress += async (s, e) => {
 			e.Cancel = true;
-			await buffer.copyLines();
+			await buffer.CopyLines();
 		};
 	}
 
 	int prevTopLine;
 
 
-	public async Task<bool> startFileExploring() {
+	public async Task<bool> StartFileExploring() {
 		Console.Clear();
 		Console.CursorVisible = false;
-		fileExplorerRenderer.resetDirectoryView();
-		fileExplorerRenderer.renderDirectroys();
+		fileExplorerRenderer.ResetDirectoryView();
+		fileExplorerRenderer.RenderDirectroys();
 
 
 		while (true) {
@@ -55,14 +55,14 @@ class Editor {
 				return true;
 			}
 			else if (keyInfo.Key == ConsoleKey.DownArrow) {
-				fileExplorer.moveToNextEntry();
-				fileExplorerRenderer.resetDirectoryView();
-				fileExplorerRenderer.renderDirectroys();
+				fileExplorer.MoveToNextEntry();
+				fileExplorerRenderer.ResetDirectoryView();
+				fileExplorerRenderer.RenderDirectroys();
 			}
 			else if (keyInfo.Key == ConsoleKey.UpArrow) {
-				fileExplorer.moveToPrevEntry();
-				fileExplorerRenderer.resetDirectoryView();
-				fileExplorerRenderer.renderDirectroys();
+				fileExplorer.MoveToPrevEntry();
+				fileExplorerRenderer.ResetDirectoryView();
+				fileExplorerRenderer.RenderDirectroys();
 			}
 			else if (keyInfo.Key == ConsoleKey.Escape) {
 				return false;
@@ -72,20 +72,20 @@ class Editor {
 	}
 
 
-	public async Task startEditor() {
+	public async Task StartEditor() {
 		Console.Clear();
 		Console.Write("\x1b[?2004h");
 
-		buffer.lines = fileManager.readFile(@"C:\Users\leona\source\repos\ide-maybe\test.txt");
+		buffer.lines = fileManager.ReadFile(@"C:\Users\leona\source\repos\ide-maybe\test.txt");
 
 
-		render.resetView();
-		render.printScreen();
-		render.drawStatusBar(searchInputMode);
+		render.ResetView();
+		render.PrintScreen();
+		render.DrawStatusBar(searchInputMode);
 
 		if (!resizeWatcherStarted) {
 			resizeWatcherStarted = true;
-			startResizeWatcher();
+			StartResizeWatcher();
 		}
 
 		while (true) {
@@ -103,8 +103,8 @@ class Editor {
 
 			// early returen if searchin
 			if (currInSearchMode) {
-				handleSearchModeInput(keyInfo);
-				render.drawStatusBar(searchInputMode);
+				HandleSearchModeInput(keyInfo);
+				render.DrawStatusBar(searchInputMode);
 				continue;
 			}
 
@@ -118,226 +118,226 @@ class Editor {
 				}
 
 				if (bufferedChars.Count > 1) {
-					handlePaste(bufferedChars);
+					HandlePaste(bufferedChars);
 					continue;
 				}
 				else {
 					if (buffer.isSelecting) {
-						redoUndoHandler.addActionToUndo(new InsertCharWhileSelecting(buffer, keyInfo.KeyChar));
+						redoUndoHandler.AddActionToUndo(new InsertCharWhileSelecting(buffer, keyInfo.KeyChar));
 					}
 					else {
-						redoUndoHandler.addActionToUndo(new InsertCharAction(keyInfo.KeyChar, buffer.column, buffer.line));
+						redoUndoHandler.AddActionToUndo(new InsertCharAction(keyInfo.KeyChar, buffer.column, buffer.line));
 					}
-					buffer.insertChar(keyInfo.KeyChar);
-					render.resetView();
-					render.printScreen();
+					buffer.InsertChar(keyInfo.KeyChar);
+					render.ResetView();
+					render.PrintScreen();
 					continue;
 				}
 			}
 
 			if (keyInfo.Key == ConsoleKey.Enter) {
 				if (buffer.isSelecting) {
-					redoUndoHandler.addActionToUndo(new NewLineWhileSelecting(buffer));
+					redoUndoHandler.AddActionToUndo(new NewLineWhileSelecting(buffer));
 				}
 				else {
-					redoUndoHandler.addActionToUndo(new NewLineAction(buffer.line, buffer.column, buffer));
+					redoUndoHandler.AddActionToUndo(new NewLineAction(buffer.line, buffer.column, buffer));
 				}
-				buffer.newLine();
-				render.resetView();
-				render.printScreen();
+				buffer.NewLine();
+				render.ResetView();
+				render.PrintScreen();
 			}
 			else if (keyInfo.Key == ConsoleKey.Backspace) {
 				if (buffer.column == 0 && buffer.line == 0 && !buffer.isSelecting) continue;
 				if (buffer.isSelecting) {
-					redoUndoHandler.addActionToUndo(new DeleteWhileSelecting(buffer));
+					redoUndoHandler.AddActionToUndo(new DeleteWhileSelecting(buffer));
 				}
 				else {
 					if (buffer.column == 0) {
-						redoUndoHandler.addActionToUndo(new DeleteLineAction(buffer.line, buffer));
+						redoUndoHandler.AddActionToUndo(new DeleteLineAction(buffer.line, buffer));
 					}
 					else {
-						if (buffer.isItTab()) {
-							redoUndoHandler.addActionToUndo(new DeleteTabAction(buffer.column, buffer.line));
+						if (buffer.IsItTab()) {
+							redoUndoHandler.AddActionToUndo(new DeleteTabAction(buffer.column, buffer.line));
 						}
 						else {
-							redoUndoHandler.addActionToUndo(new DeleteCharAction(buffer.lines[buffer.line][buffer.column - 1], buffer.column - 1, buffer.line));
+							redoUndoHandler.AddActionToUndo(new DeleteCharAction(buffer.lines[buffer.line][buffer.column - 1], buffer.column - 1, buffer.line));
 						}
 					}
 				}
-				bool fullRedraw = buffer.backspace();
+				bool fullRedraw = buffer.Backspace();
 				if (fullRedraw) {
-					render.resetView();
-					render.printScreen();
+					render.ResetView();
+					render.PrintScreen();
 				}
 				else {
-					render.printLine(buffer.line, false);
+					render.PrintLine(buffer.line, false);
 				}
 			}
 			else if (keyInfo.Key == ConsoleKey.LeftArrow) {
 				if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Shift)) {
-					if (!buffer.isSelecting) buffer.startSelecting();
-					buffer.moveLeft();
-					buffer.updateSelection();
-					render.printScreen();
+					if (!buffer.isSelecting) buffer.StartSelecting();
+					buffer.MoveLeft();
+					buffer.UpdateSelection();
+					render.PrintScreen();
 				}
 				else {
 					if (buffer.isSelecting) {
-						buffer.moveLeftWhileSelecting();
-						buffer.stopSelecting();
-						render.resetView();
-						render.printScreen();
+						buffer.MoveLeftWhileSelecting();
+						buffer.StopSelecting();
+						render.ResetView();
+						render.PrintScreen();
 					}
 					else {
-						buffer.moveLeft();
+						buffer.MoveLeft();
 					}
 				}
 
-				render.resetView();
-				if (prevTopLine != render.topLine) render.printScreen();
+				render.ResetView();
+				if (prevTopLine != render.topLine) render.PrintScreen();
 				prevTopLine = render.topLine;
-				render.setCursor(buffer.line);
+				render.SetCursor(buffer.line);
 			}
 			else if (keyInfo.Key == ConsoleKey.RightArrow) {
 				if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Shift)) {
-					if (!buffer.isSelecting) buffer.startSelecting();
-					buffer.moveRight();
-					buffer.updateSelection();
-					render.printScreen();
+					if (!buffer.isSelecting) buffer.StartSelecting();
+					buffer.MoveRight();
+					buffer.UpdateSelection();
+					render.PrintScreen();
 				}
 				else {
 					if (buffer.isSelecting) {
-						buffer.moveRightWhileSelecting();
-						buffer.stopSelecting();
-						render.resetView();
-						render.printScreen();
+						buffer.MoveRightWhileSelecting();
+						buffer.StopSelecting();
+						render.ResetView();
+						render.PrintScreen();
 					}
 					else {
-						buffer.moveRight();
+						buffer.MoveRight();
 					}
 				}
 
-				render.resetView();
-				if (prevTopLine != render.topLine) render.printScreen();
+				render.ResetView();
+				if (prevTopLine != render.topLine) render.PrintScreen();
 				prevTopLine = render.topLine;
-				render.setCursor(buffer.line);
+				render.SetCursor(buffer.line);
 			}
 			else if (keyInfo.Key == ConsoleKey.UpArrow) {
 				if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Shift)) {
-					if (!buffer.isSelecting) buffer.startSelecting();
-					buffer.moveUp();
-					buffer.updateSelection();
-					render.printScreen();
+					if (!buffer.isSelecting) buffer.StartSelecting();
+					buffer.MoveUp();
+					buffer.UpdateSelection();
+					render.PrintScreen();
 				}
 				else {
-					buffer.moveUp();
+					buffer.MoveUp();
 					if (buffer.isSelecting) {
-						buffer.stopSelecting();
-						render.resetView();
-						render.printScreen();
+						buffer.StopSelecting();
+						render.ResetView();
+						render.PrintScreen();
 					}
 				}
 
-				render.resetView();
-				if (prevTopLine != render.topLine) render.printScreen();
+				render.ResetView();
+				if (prevTopLine != render.topLine) render.PrintScreen();
 				prevTopLine = render.topLine;
-				render.setCursor(buffer.line);
+				render.SetCursor(buffer.line);
 			}
 			else if (keyInfo.Key == ConsoleKey.DownArrow) {
 				if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Shift)) {
-					if (!buffer.isSelecting) buffer.startSelecting();
-					buffer.moveDown();
-					buffer.updateSelection();
-					render.printScreen();
+					if (!buffer.isSelecting) buffer.StartSelecting();
+					buffer.MoveDown();
+					buffer.UpdateSelection();
+					render.PrintScreen();
 				}
 				else {
-					buffer.moveDown();
+					buffer.MoveDown();
 					if (buffer.isSelecting) {
-						buffer.stopSelecting();
-						render.resetView();
-						render.printScreen();
+						buffer.StopSelecting();
+						render.ResetView();
+						render.PrintScreen();
 					}
 				}
 
-				render.resetView();
-				if (prevTopLine != render.topLine) render.printScreen();
+				render.ResetView();
+				if (prevTopLine != render.topLine) render.PrintScreen();
 				prevTopLine = render.topLine;
-				render.setCursor(buffer.line);
+				render.SetCursor(buffer.line);
 			}
 			else if (!char.IsControl(keyInfo.KeyChar)) {
 				if (buffer.pairs.ContainsKey(keyInfo.KeyChar)) {
 					if (buffer.isSelecting) {
-						redoUndoHandler.addActionToUndo(new InsertCharPairActionWhileSelecting(buffer, keyInfo.KeyChar));
+						redoUndoHandler.AddActionToUndo(new InsertCharPairActionWhileSelecting(buffer, keyInfo.KeyChar));
 					}
 					else {
-						redoUndoHandler.addActionToUndo(new InsertCharPairAction(keyInfo.KeyChar, buffer.column, buffer.line));
+						redoUndoHandler.AddActionToUndo(new InsertCharPairAction(keyInfo.KeyChar, buffer.column, buffer.line));
 					}
-					buffer.insertCharPair(keyInfo.KeyChar);
+					buffer.InsertCharPair(keyInfo.KeyChar);
 
-					render.resetView();
-					render.printScreen();
+					render.ResetView();
+					render.PrintScreen();
 				}
 				else {
 					if (buffer.isSelecting) {
-						redoUndoHandler.addActionToUndo(new InsertCharWhileSelecting(buffer, keyInfo.KeyChar));
+						redoUndoHandler.AddActionToUndo(new InsertCharWhileSelecting(buffer, keyInfo.KeyChar));
 					}
 					else {
-						redoUndoHandler.addActionToUndo(new InsertCharAction(keyInfo.KeyChar, buffer.column, buffer.line));
+						redoUndoHandler.AddActionToUndo(new InsertCharAction(keyInfo.KeyChar, buffer.column, buffer.line));
 					}
-					buffer.insertChar(keyInfo.KeyChar);
-					render.resetView();
-					render.printScreen();
+					buffer.InsertChar(keyInfo.KeyChar);
+					render.ResetView();
+					render.PrintScreen();
 				}
 			}
 			else if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)) {
 				if (keyInfo.Key == ConsoleKey.C) {
-					await buffer.copyLines();
+					await buffer.CopyLines();
 				}
 				else if (keyInfo.Key == ConsoleKey.X) {
 					if (buffer.isSelecting) {
-						redoUndoHandler.addActionToUndo(new DeleteWhileSelecting(buffer));
+						redoUndoHandler.AddActionToUndo(new DeleteWhileSelecting(buffer));
 					}
-					await buffer.cutLines();
-					render.resetView();
-					render.printScreen();
+					await buffer.CutLines();
+					render.ResetView();
+					render.PrintScreen();
 				}
 				else if (keyInfo.Key == ConsoleKey.A) {
-					fileManager.saveFile(fileManager.currentFilePath, buffer.lines);
+					fileManager.SaveFile(fileManager.currentFilePath, buffer.lines);
 				}
 				else if (keyInfo.Key == ConsoleKey.Z) {
-					redoUndoHandler.undo();
-					render.resetView();
-					render.printScreen();
+					redoUndoHandler.Undo();
+					render.ResetView();
+					render.PrintScreen();
 				}
 				else if (keyInfo.Key == ConsoleKey.Y) {
-					redoUndoHandler.redo();
-					render.resetView();
-					render.printScreen();
+					redoUndoHandler.Redo();
+					render.ResetView();
+					render.PrintScreen();
 				}
 				else if (keyInfo.Key == ConsoleKey.F) {
 					statusBar.statusBarMode = StatusBarMode.Search;
 					currInSearchMode = true;
 					searchInputMode = SearchInputMode.Search;
-					replacer.clearReplace();
+					replacer.ClearReplace();
 					typedSearchedChar.Clear();
 					typedReplaceChar.Clear();
-					searcher.clearSearch();
-					render.resetView();
-					render.printScreen();
+					searcher.ClearSearch();
+					render.ResetView();
+					render.PrintScreen();
 				}
 				else if (keyInfo.Key == ConsoleKey.H) {
 					statusBar.statusBarMode = StatusBarMode.Search;
 					currInSearchMode = true;
 					searchInputMode = SearchInputMode.Search;
-					replacer.clearReplace();
+					replacer.ClearReplace();
 					replacer.isReplacing = true;
 					typedSearchedChar.Clear();
 					typedReplaceChar.Clear();
-					searcher.clearSearch();
-					render.resetView();
-					render.printScreen();
+					searcher.ClearSearch();
+					render.ResetView();
+					render.PrintScreen();
 				}
 				else if (keyInfo.Key == ConsoleKey.O) {
-					var shouldQuit = await startFileExploring();
+					var shouldQuit = await StartFileExploring();
 					if (shouldQuit) {
 						Console.Clear();
 						Console.Write("\x1b[?2004l");
@@ -345,31 +345,31 @@ class Editor {
 						Console.WriteLine("till next time");
 						break;
 					}
-					render.resetView();
-					render.printScreen();
+					render.ResetView();
+					render.PrintScreen();
 				}
 			}
 			else if (keyInfo.Key == ConsoleKey.Tab) {
-				redoUndoHandler.addActionToUndo(new InsertTabAction(buffer.column, buffer.line));
-				buffer.insertTab(4);
-				render.printLine(buffer.line, false);
+				redoUndoHandler.AddActionToUndo(new InsertTabAction(buffer.column, buffer.line));
+				buffer.InsertTab(4);
+				render.PrintLine(buffer.line, false);
 			}
 
-			render.drawStatusBar(searchInputMode);
+			render.DrawStatusBar(searchInputMode);
 		}
 	}
 
-	private void handleSearchModeInput(ConsoleKeyInfo keyInfo) {
+	private void HandleSearchModeInput(ConsoleKeyInfo keyInfo) {
 		if (keyInfo.Key == ConsoleKey.Escape) {
 			currInSearchMode = false;
 			searchInputMode = SearchInputMode.Search;
-			replacer.clearReplace();
+			replacer.ClearReplace();
 			typedSearchedChar.Clear();
 			typedReplaceChar.Clear();
-			searcher.clearSearch();
+			searcher.ClearSearch();
 			statusBar.statusBarMode = StatusBarMode.Normal;
-			render.resetView();
-			render.printScreen();
+			render.ResetView();
+			render.PrintScreen();
 			return;
 		}
 		else if (keyInfo.Key == ConsoleKey.Backspace) {
@@ -379,36 +379,36 @@ class Editor {
 				}
 
 				if (typedSearchedChar.Count == 0) {
-					searcher.clearSearch();
+					searcher.ClearSearch();
 				}
 				else {
-					searcher.setSearch(typedSearchedChar);
+					searcher.SetSearch(typedSearchedChar);
 				}
 			}
 			else if (searchInputMode == SearchInputMode.Replace) {
 				if (typedReplaceChar.Count > 0) {
 					typedReplaceChar.RemoveAt(typedReplaceChar.Count - 1);
 				}
-				replacer.setCharsUsedToReplace(typedReplaceChar);
+				replacer.SetCharsUsedToReplace(typedReplaceChar);
 			}
 
-			render.resetView();
-			render.printScreen();
+			render.ResetView();
+			render.PrintScreen();
 			return;
 		}
 		else if (!char.IsControl(keyInfo.KeyChar)) {
 			if (searchInputMode == SearchInputMode.Search) {
 				if (typedSearchedChar.Count > 25) return;
 				typedSearchedChar.Add(keyInfo.KeyChar);
-				searcher.setSearch(typedSearchedChar);
+				searcher.SetSearch(typedSearchedChar);
 			}
 			else if (searchInputMode == SearchInputMode.Replace) {
 				if (typedReplaceChar.Count > 25) return;
 				typedReplaceChar.Add(keyInfo.KeyChar);
-				replacer.setCharsUsedToReplace(typedReplaceChar);
+				replacer.SetCharsUsedToReplace(typedReplaceChar);
 			}
-			render.resetView();
-			render.printScreen();
+			render.ResetView();
+			render.PrintScreen();
 		}
 		else if (keyInfo.Key == ConsoleKey.Tab) {
 			if (replacer.isReplacing) {
@@ -421,7 +421,7 @@ class Editor {
 					searchInputMode = searchInputMode == SearchInputMode.Search ? SearchInputMode.Replace : SearchInputMode.Search;
 				}
 				else {
-					replacer.clearReplace();
+					replacer.ClearReplace();
 					replacer.isReplacing = true;
 					searchInputMode = SearchInputMode.Replace;
 				}
@@ -430,32 +430,32 @@ class Editor {
 		else if (keyInfo.Key == ConsoleKey.Enter) {
 			if (searchInputMode == SearchInputMode.Search) {
 				if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Shift)) {
-					searcher.moveToPrevFind();
+					searcher.MoveToPrevFind();
 				}
 				else {
-					searcher.moveToNextFind();
+					searcher.MoveToNextFind();
 				}
 			}
 			else if (searchInputMode == SearchInputMode.Replace) {
 				if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Shift)) {
-					redoUndoHandler.addActionToUndo(new ReplaceAllWordsAction(searcher.findlings, buffer, replacer.charsUsedToReplace));
-					replacer.replaceAllFindilngs();
+					redoUndoHandler.AddActionToUndo(new ReplaceAllWordsAction(searcher.findlings, buffer, replacer.charsUsedToReplace));
+					replacer.ReplaceAllFindlings();
 				}
 				else {
-					var findlingData = searcher.getCurrentFindlingData();
+					var findlingData = searcher.GetCurrentFindlingData();
 					if (findlingData == null) return;
-					redoUndoHandler.addActionToUndo(new ReplaceWordAction(findlingData.Value.start, findlingData.Value.length, findlingData.Value.line, replacer.charsUsedToReplace, buffer));
-					replacer.replaceCurrentFindling();
+					redoUndoHandler.AddActionToUndo(new ReplaceWordAction(findlingData.Value.start, findlingData.Value.length, findlingData.Value.line, replacer.charsUsedToReplace, buffer));
+					replacer.ReplaceCurrentFindling();
 				}
 			}
 
-			render.resetView();
-			render.printScreen();
+			render.ResetView();
+			render.PrintScreen();
 
 		}
 	}
 
-	private void handlePaste(List<char> chars) {
+	private void HandlePaste(List<char> chars) {
 		List<List<char>> pastedData = new List<List<char>>();
 		pastedData.Add(new List<char>());
 		int pastedDataLine = 0;
@@ -481,26 +481,26 @@ class Editor {
 			pastedData.RemoveAt(pastedData.Count - 1);
 		}
 		if (buffer.isSelecting) {
-			redoUndoHandler.addActionToUndo(new PasteDataWhileSelecting(pastedData, buffer));
+			redoUndoHandler.AddActionToUndo(new PasteDataWhileSelecting(pastedData, buffer));
 		}
 		else {
-			redoUndoHandler.addActionToUndo(new PasteDataAction(pastedData, buffer.column, buffer.line, buffer));
+			redoUndoHandler.AddActionToUndo(new PasteDataAction(pastedData, buffer.column, buffer.line, buffer));
 		}
-		buffer.pasteData(pastedData);
-		render.resetView();
-		render.printScreen();
+		buffer.PasteData(pastedData);
+		render.ResetView();
+		render.PrintScreen();
 	}
 
-	private void startResizeWatcher() {
+	private void StartResizeWatcher() {
 		Task.Run(async () => {
 			int prevHeight = Console.WindowHeight;
 			int prevWidth = Console.WindowWidth;
 			while (true) {
 				if (Console.WindowHeight != prevHeight || Console.WindowWidth != prevWidth) {
 					Console.Clear();
-					render.resetView();
-					render.printScreen();
-					render.drawStatusBar(searchInputMode);
+					render.ResetView();
+					render.PrintScreen();
+					render.DrawStatusBar(searchInputMode);
 					prevHeight = Console.WindowHeight;
 					prevWidth = Console.WindowWidth;
 
@@ -511,3 +511,4 @@ class Editor {
 		});
 	}
 }
+

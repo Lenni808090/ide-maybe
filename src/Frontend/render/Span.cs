@@ -8,40 +8,40 @@ struct Span {
 class Converter {
 
 
-	public List<Span> convertFindlingsToSpans(List<Findling> findlings) {
+	public List<Span> ConvertFindlingsToSpans(List<Findling> findlings) {
 		List<Span> spans = new();
 		foreach (Findling findling in findlings) {
-			spans.Add(findlingToSpan(findling));
+			spans.Add(FindlingToSpan(findling));
 		}
 		return spans;
 	}
 
-	public List<Span> convertTokensToSpans(List<Token> tokens) {
+	public List<Span> ConvertTokensToSpans(List<Token> tokens) {
 		List<Span> spans = new();
 		foreach (Token token in tokens) {
-			spans.Add(tokenToSpan(token));
+			spans.Add(TokenToSpan(token));
 		}
 		return spans;
 	}
 
 
-	public Span convertSelectionToSpan(int start, int length) {
-		return selectionToSpan(start, length);
+	public Span ConvertSelectionToSpan(int start, int length) {
+		return SelectionToSpan(start, length);
 	}
 
 
 
-	Span tokenToSpan(Token t) {
+	Span TokenToSpan(Token t) {
 		return new Span {
 			Lenght = t.Length,
 			Start = t.Start,
-			ForegroundColor = getColor(t.tokenKind),
+			ForegroundColor = GetColor(t.tokenKind),
 			BackgroundColor = null,
 			Priority = 1,
 		};
 	}
 
-	Span findlingToSpan(Findling f) {
+	Span FindlingToSpan(Findling f) {
 		return new Span {
 			Lenght = f.Length,
 			Start = f.Start,
@@ -51,7 +51,7 @@ class Converter {
 		};
 	}
 
-	Span selectionToSpan(int start, int length) {
+	Span SelectionToSpan(int start, int length) {
 		return new Span {
 			Start = start,
 			Lenght = length,
@@ -61,7 +61,7 @@ class Converter {
 		};
 	}
 
-	public ConsoleColor getColor(TokenKind tokenKind) {
+	public ConsoleColor GetColor(TokenKind tokenKind) {
 		switch (tokenKind) {
 
 			case TokenKind.Identifier:
@@ -86,4 +86,5 @@ class Converter {
 		}
 	}
 }
+
 

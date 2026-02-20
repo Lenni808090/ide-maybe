@@ -11,41 +11,42 @@ class Replacer {
 		this.searcher = searcher;
 	}
 
-	public void clearReplace() {
+	public void ClearReplace() {
 		isReplacing = false;
 		charsUsedToReplace.Clear();
 	}
 
-	public void replaceCurrentFindling() {
+	public void ReplaceCurrentFindling() {
 		if (searcher.currentFindInd == null) return;
-		var currentFindlingData = searcher.getCurrentFindlingData();
+		var currentFindlingData = searcher.GetCurrentFindlingData();
 		if (currentFindlingData == null) return;
 		int start = currentFindlingData.Value.start;
 		int length = currentFindlingData.Value.length;
 		int line = currentFindlingData.Value.line;
 
-		searcher.removeFindlingByInd(searcher.currentFindInd.Value);
-		buffer.removeArea(line, line, start, start + length);
-		buffer.insertCharsAtPos(line, start, charsUsedToReplace);
-		searcher.searchFile();
+		searcher.RemoveFindlingByInd(searcher.currentFindInd.Value);
+		buffer.RemoveArea(line, line, start, start + length);
+		buffer.InsertCharsAtPos(line, start, charsUsedToReplace);
+		searcher.SearchFile();
 		buffer.line = line;
 		buffer.column = start;
-		buffer.clampCursor();
+		buffer.ClampCursor();
 	}
 
-	public void replaceAllFindilngs() {
+	public void ReplaceAllFindlings() {
 		Findling? currentFindling;
 		for (int i = searcher.totalFinds - 1; i >= 0; i--) {
-			currentFindling = searcher.getFindlingByInd(i);
+			currentFindling = searcher.GetFindlingByInd(i);
 			if (currentFindling == null) return;
-			searcher.removeFindlingByInd(i);
-			buffer.removeArea(currentFindling.Value.line, currentFindling.Value.line, currentFindling.Value.Start, currentFindling.Value.Start + currentFindling.Value.Length);
-			buffer.insertCharsAtPos(currentFindling.Value.line, currentFindling.Value.Start, charsUsedToReplace);
+			searcher.RemoveFindlingByInd(i);
+			buffer.RemoveArea(currentFindling.Value.line, currentFindling.Value.line, currentFindling.Value.Start, currentFindling.Value.Start + currentFindling.Value.Length);
+			buffer.InsertCharsAtPos(currentFindling.Value.line, currentFindling.Value.Start, charsUsedToReplace);
 		}
-		buffer.clampCursor();
+		buffer.ClampCursor();
 	}
 
-	public void setCharsUsedToReplace(List<char> chars) {
+	public void SetCharsUsedToReplace(List<char> chars) {
 		charsUsedToReplace = new List<char>(chars);
 	}
 }
+

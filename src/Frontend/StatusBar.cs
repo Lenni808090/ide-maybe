@@ -26,7 +26,7 @@ class StatusBar {
 		this.fileData = new FileData("", "0 KB", "Unknown");
 	}
 
-	public (string filePath, FileData fileData, int column, int line, StatusBarMode statusBarMode, string searchedChars, string replaceChars, bool showReplace) getData() {
+	public (string filePath, FileData fileData, int column, int line, StatusBarMode statusBarMode, string searchedChars, string replaceChars, bool showReplace) GetData() {
 		UpdateStatusBar();
 
 		return (filePath, fileData, column, line, statusBarMode, search, replace, showReplace);
@@ -84,3 +84,4 @@ enum StatusBarMode {
 	Search,
 
 }
+

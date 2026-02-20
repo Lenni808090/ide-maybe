@@ -19,11 +19,11 @@ class InsertCharAction : Action {
 		this.linePos = linePos;
 	}
 	public override void Redo(Buffer buffer) {
-		buffer.insertCharAtPos(insertedChar, columnPos, linePos);
+		buffer.InsertCharAtPos(insertedChar, columnPos, linePos);
 	}
 
 	public override void Undo(Buffer buffer) {
-		buffer.removeCharAtPos(columnPos, linePos);
+		buffer.RemoveCharAtPos(columnPos, linePos);
 	}
 }
 
@@ -38,12 +38,12 @@ class InsertCharPairAction : Action {
 		this.linePos = linePos;
 	}
 	public override void Redo(Buffer buffer) {
-		buffer.insertCharPairAtPos(insertedChar, columnPos, linePos);
+		buffer.InsertCharPairAtPos(insertedChar, columnPos, linePos);
 	}
 
 	public override void Undo(Buffer buffer) {
-		buffer.removeCharAtPos(columnPos, linePos);
-		buffer.removeCharAtPos(columnPos + 1, linePos);
+		buffer.RemoveCharAtPos(columnPos, linePos);
+		buffer.RemoveCharAtPos(columnPos + 1, linePos);
 	}
 }
 
@@ -54,11 +54,11 @@ class InsertCharPairActionWhileSelecting : Action {
 
 	public InsertCharPairActionWhileSelecting(Buffer buffer, char insertedChar) {
 		this.insertedChar = insertedChar;
-		before = buffer.getSelectedArea();
+		before = buffer.GetSelectedArea();
 	}
 
 	public override void Redo(Buffer buffer) {
-		buffer.insertCharPairArroundSelection(
+		buffer.InsertCharPairAroundSelection(
 			insertedChar,
 			before.startColumn,
 			before.startLine,
@@ -74,9 +74,9 @@ class InsertCharPairActionWhileSelecting : Action {
 			? before.endColumn + 1
 			: before.endColumn;
 
-		buffer.removeCharAtPos(openPos, before.startLine);
-		buffer.removeCharAtPos(closePos, before.endLine);
-		buffer.stopSelecting();
+		buffer.RemoveCharAtPos(openPos, before.startLine);
+		buffer.RemoveCharAtPos(closePos, before.endLine);
+		buffer.StopSelecting();
 	}
 }
 
@@ -90,11 +90,11 @@ class InsertTabAction : Action {
 		this.linePos = linePos;
 	}
 	public override void Redo(Buffer buffer) {
-		buffer.insertTabAtPos(columnPos, linePos, 4);
+		buffer.InsertTabAtPos(columnPos, linePos, 4);
 	}
 
 	public override void Undo(Buffer buffer) {
-		buffer.removeTabAtPos(columnPos + 4, linePos);
+		buffer.RemoveTabAtPos(columnPos + 4, linePos);
 	}
 }
 
@@ -110,11 +110,11 @@ class DeleteCharAction : Action {
 		this.linePos = linePos;
 	}
 	public override void Redo(Buffer buffer) {
-		buffer.removeCharAtPos(columnPos, linePos);
+		buffer.RemoveCharAtPos(columnPos, linePos);
 	}
 
 	public override void Undo(Buffer buffer) {
-		buffer.insertCharAtPos(deletedChar, columnPos, linePos);
+		buffer.InsertCharAtPos(deletedChar, columnPos, linePos);
 	}
 }
 
@@ -127,11 +127,11 @@ class DeleteTabAction : Action {
 		this.linePos = linePos;
 	}
 	public override void Redo(Buffer buffer) {
-		buffer.removeTabAtPos(columnPos, linePos);
+		buffer.RemoveTabAtPos(columnPos, linePos);
 	}
 
 	public override void Undo(Buffer buffer) {
-		buffer.insertTabAtPos(columnPos - 4, linePos, 4);
+		buffer.InsertTabAtPos(columnPos - 4, linePos, 4);
 	}
 }
 
@@ -143,14 +143,14 @@ class NewLineAction : Action {
 	public NewLineAction(int linePos, int columnPos, Buffer buffer) {
 		this.linePos = linePos;
 		this.columnPos = columnPos;
-		insertedIndentCount = Math.Min(buffer.getPrevWhiteSpaces(linePos), columnPos);
+		insertedIndentCount = Math.Min(buffer.GetPrevWhiteSpaces(linePos), columnPos);
 	}
 	public override void Redo(Buffer buffer) {
-		buffer.newLineAtPos(linePos, columnPos);
+		buffer.NewLineAtPos(linePos, columnPos);
 	}
 
 	public override void Undo(Buffer buffer) {
-		buffer.mergeLinesAtPos(linePos, insertedIndentCount);
+		buffer.MergeLinesAtPos(linePos, insertedIndentCount);
 	}
 }
 
@@ -162,11 +162,11 @@ class DeleteLineAction : Action {
 		deletedIntoLineLength = buffer.lines[linePos - 1].Count;
 	}
 	public override void Redo(Buffer buffer) {
-		buffer.mergeLinesAtPos(linePos - 1);
+		buffer.MergeLinesAtPos(linePos - 1);
 	}
 
 	public override void Undo(Buffer buffer) {
-		buffer.newLineAtPosRaw(linePos - 1, deletedIntoLineLength);
+		buffer.NewLineAtPosRaw(linePos - 1, deletedIntoLineLength);
 	}
 }
 
@@ -175,8 +175,8 @@ abstract class SelectionAction : Action {
 	protected List<List<char>> deletedData;
 
 	protected SelectionAction(Buffer buffer) {
-		selectedArea = buffer.getSelectedArea();
-		deletedData = buffer.getAreaData(
+		selectedArea = buffer.GetSelectedArea();
+		deletedData = buffer.GetAreaData(
 			selectedArea.startLine,
 			selectedArea.endLine,
 			selectedArea.startColumn,
@@ -184,15 +184,15 @@ abstract class SelectionAction : Action {
 		);
 	}
 
-	internal static void removeAreaAndSetCursor(
+	internal static void RemoveAreaAndSetCursor(
 		Buffer buffer,
 		(int startLine, int endLine, int startColumn, int endColumn) area
 	) {
-		buffer.removeArea(area.startLine, area.endLine, area.startColumn, area.endColumn);
+		buffer.RemoveArea(area.startLine, area.endLine, area.startColumn, area.endColumn);
 		buffer.line = area.startLine;
 		buffer.column = area.startColumn;
 		buffer.prefColumn = buffer.column;
-		buffer.clampCursor();
+		buffer.ClampCursor();
 	}
 }
 
@@ -201,13 +201,13 @@ class DeleteWhileSelecting : SelectionAction {
 	public DeleteWhileSelecting(Buffer buffer) : base(buffer) { }
 
 	public override void Redo(Buffer buffer) {
-		removeAreaAndSetCursor(buffer, selectedArea);
-		buffer.stopSelecting();
+		RemoveAreaAndSetCursor(buffer, selectedArea);
+		buffer.StopSelecting();
 	}
 
 	public override void Undo(Buffer buffer) {
-		buffer.insertLinesAtPos(selectedArea.startLine, selectedArea.startColumn, deletedData);
-		buffer.setSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
+		buffer.InsertLinesAtPos(selectedArea.startLine, selectedArea.startColumn, deletedData);
+		buffer.SetSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
 	}
 }
 
@@ -215,19 +215,19 @@ class NewLineWhileSelecting : SelectionAction {
 
 	int insertedIndentCount;
 	public NewLineWhileSelecting(Buffer buffer) : base(buffer) {
-		insertedIndentCount = Math.Min(buffer.getPrevWhiteSpaces(selectedArea.endLine), selectedArea.endColumn);
+		insertedIndentCount = Math.Min(buffer.GetPrevWhiteSpaces(selectedArea.endLine), selectedArea.endColumn);
 	}
 
 	public override void Redo(Buffer buffer) {
-		buffer.newLineAtPos(selectedArea.endLine, selectedArea.endColumn);
-		removeAreaAndSetCursor(buffer, selectedArea);
-		buffer.stopSelecting();
+		buffer.NewLineAtPos(selectedArea.endLine, selectedArea.endColumn);
+		RemoveAreaAndSetCursor(buffer, selectedArea);
+		buffer.StopSelecting();
 	}
 
 	public override void Undo(Buffer buffer) {
-		buffer.mergeLinesAtPos(selectedArea.endLine, insertedIndentCount);
-		buffer.insertLinesAtPos(selectedArea.startLine, selectedArea.startColumn, deletedData);
-		buffer.setSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
+		buffer.MergeLinesAtPos(selectedArea.endLine, insertedIndentCount);
+		buffer.InsertLinesAtPos(selectedArea.startLine, selectedArea.startColumn, deletedData);
+		buffer.SetSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
 	}
 }
 
@@ -243,15 +243,15 @@ class InsertCharWhileSelecting : SelectionAction {
 	}
 
 	public override void Redo(Buffer buffer) {
-		removeAreaAndSetCursor(buffer, selectedArea);
-		buffer.stopSelecting();
-		buffer.insertCharAtPos(insertedChar, columnPos, linePos);
+		RemoveAreaAndSetCursor(buffer, selectedArea);
+		buffer.StopSelecting();
+		buffer.InsertCharAtPos(insertedChar, columnPos, linePos);
 	}
 
 	public override void Undo(Buffer buffer) {
-		buffer.removeCharAtPos(columnPos, linePos);
-		buffer.insertLinesAtPos(selectedArea.startLine, selectedArea.startColumn, deletedData);
-		buffer.setSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
+		buffer.RemoveCharAtPos(columnPos, linePos);
+		buffer.InsertLinesAtPos(selectedArea.startLine, selectedArea.startColumn, deletedData);
+		buffer.SetSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
 	}
 }
 
@@ -266,11 +266,11 @@ class PasteDataWhileSelecting : SelectionAction {
 		this.pastedData = pastedData;
 		columnPos = selectedArea.startColumn;
 		linePos = selectedArea.startLine;
-		getPastedArea(buffer);
+		GetPastedArea(buffer);
 	}
 
-	public void getPastedArea(Buffer buffer) {
-		var pastedDataNoTab = buffer.convertTabsToSpace(pastedData);
+	public void GetPastedArea(Buffer buffer) {
+		var pastedDataNoTab = buffer.ConvertTabsToSpace(pastedData);
 		pastedArea.startLine = linePos;
 		pastedArea.startColumn = columnPos;
 		pastedArea.endLine = linePos + pastedDataNoTab.Count - 1;
@@ -283,16 +283,16 @@ class PasteDataWhileSelecting : SelectionAction {
 	}
 
 	public override void Redo(Buffer buffer) {
-		removeAreaAndSetCursor(buffer, selectedArea);
-		buffer.stopSelecting();
-		buffer.insertLinesAtPos(linePos, columnPos, pastedData);
+		RemoveAreaAndSetCursor(buffer, selectedArea);
+		buffer.StopSelecting();
+		buffer.InsertLinesAtPos(linePos, columnPos, pastedData);
 	}
 
 	public override void Undo(Buffer buffer) {
-		removeAreaAndSetCursor(buffer, pastedArea);
-		buffer.stopSelecting();
-		buffer.insertLinesAtPos(selectedArea.startLine, selectedArea.startColumn, deletedData);
-		buffer.setSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
+		RemoveAreaAndSetCursor(buffer, pastedArea);
+		buffer.StopSelecting();
+		buffer.InsertLinesAtPos(selectedArea.startLine, selectedArea.startColumn, deletedData);
+		buffer.SetSelectedArea(selectedArea.startLine, selectedArea.endLine, selectedArea.startColumn, selectedArea.endColumn);
 	}
 }
 
@@ -313,28 +313,28 @@ class ReplaceWordAction : Action {
 		this.line = line;
 		this.newChars = new List<char>(newChars);
 		oldChars = new();
-		getReplacedWord(buffer);
+		GetReplacedWord(buffer);
 	}
 
 
-	public void getReplacedWord(Buffer buffer) {
-		var oldCharsList = buffer.getAreaData(line, line, start, start + length);
+	public void GetReplacedWord(Buffer buffer) {
+		var oldCharsList = buffer.GetAreaData(line, line, start, start + length);
 		oldChars = new List<char>(oldCharsList[0]);
 	}
 	public override void Redo(Buffer buffer) {
-		buffer.removeArea(line, line, start, start + oldChars.Count);
-		buffer.insertCharsAtPos(line, start, newChars);
+		buffer.RemoveArea(line, line, start, start + oldChars.Count);
+		buffer.InsertCharsAtPos(line, start, newChars);
 		buffer.line = line;
 		buffer.column = start;
-		buffer.clampCursor();
+		buffer.ClampCursor();
 	}
 
 	public override void Undo(Buffer buffer) {
-		buffer.removeArea(line, line, start, start + newChars.Count);
-		buffer.insertCharsAtPos(line, start, oldChars);
+		buffer.RemoveArea(line, line, start, start + newChars.Count);
+		buffer.InsertCharsAtPos(line, start, oldChars);
 		buffer.line = line;
 		buffer.column = start;
-		buffer.clampCursor();
+		buffer.ClampCursor();
 	}
 }
 
@@ -348,11 +348,11 @@ class ReplaceAllWordsAction : Action {
 		this.findlings = new List<List<Findling>>(findlings);
 		replaceWordsActions = new();
 		this.newChars = new List<char>(newChars);
-		getReplacedWordActionList(buffer);
+		GetReplacedWordActionList(buffer);
 	}
 
 
-	public void getReplacedWordActionList(Buffer buffer) {
+	public void GetReplacedWordActionList(Buffer buffer) {
 		List<Findling> flattenedFindlingList = new();
 		flattenedFindlingList.AddRange(findlings.SelectMany(f => f).ToList());
 		foreach (Findling findling in flattenedFindlingList) {
@@ -373,7 +373,7 @@ class ReplaceAllWordsAction : Action {
 		buffer.line = replaceWordsActions[0].line;
 		buffer.column = replaceWordsActions[0].start;
 
-		buffer.clampCursor();
+		buffer.ClampCursor();
 	}
 }
 
@@ -387,11 +387,11 @@ class PasteDataAction : Action {
 		this.pastedData = pastedData;
 		this.columnPos = columnPos;
 		this.linePos = linePos;
-		getPastedArea(buffer);
+		GetPastedArea(buffer);
 	}
 
-	public void getPastedArea(Buffer buffer) {
-		var pastedDataNoTab = buffer.convertTabsToSpace(pastedData);
+	public void GetPastedArea(Buffer buffer) {
+		var pastedDataNoTab = buffer.ConvertTabsToSpace(pastedData);
 		pastedArea.startLine = linePos;
 		pastedArea.startColumn = columnPos;
 		pastedArea.endLine = linePos + pastedDataNoTab.Count - 1;
@@ -404,12 +404,13 @@ class PasteDataAction : Action {
 	}
 
 	public override void Redo(Buffer buffer) {
-		buffer.insertLinesAtPos(linePos, columnPos, pastedData);
+		buffer.InsertLinesAtPos(linePos, columnPos, pastedData);
 	}
 
 	public override void Undo(Buffer buffer) {
-		SelectionAction.removeAreaAndSetCursor(buffer, pastedArea);
-		buffer.stopSelecting();
+		SelectionAction.RemoveAreaAndSetCursor(buffer, pastedArea);
+		buffer.StopSelecting();
 	}
 }
+
 

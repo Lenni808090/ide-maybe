@@ -6,7 +6,7 @@ using System.Text;
 class FileManager {
 	public string currentFilePath = "";
 
-	public List<List<char>> readFile(string filePath) {
+	public List<List<char>> ReadFile(string filePath) {
 		string[] lines = File.ReadAllLines(filePath);
 		List<List<char>> readFile = new List<List<char>>();
 		foreach (string line in lines) {
@@ -19,7 +19,7 @@ class FileManager {
 		return readFile;
 	}
 
-	public void saveFile(string path, List<List<char>> contentList) {
+	public void SaveFile(string path, List<List<char>> contentList) {
 		string tempPath = path + ".tmp";
 		var sb = new StringBuilder();
 
@@ -35,3 +35,4 @@ class FileManager {
 		File.Replace(tempPath, path, null);
 	}
 }
+
