@@ -82,7 +82,7 @@ class FileExplorer {
 	public void MoveOutOfEntry() {
 		var entry = new DirectoryInfo(currentDir);
 
-		if (entry.Parent != null && entry.Parent.FullName != baseDir) {
+		if (entry.Parent != null && currentDir != baseDir) {
 			currentDir = entry.Parent.FullName;
 			currentHoveredFile = 0;
 		}

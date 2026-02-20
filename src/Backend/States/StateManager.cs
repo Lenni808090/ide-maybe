@@ -22,7 +22,8 @@ class StateManager {
 	public async Task StartStateManager() {
 		Console.Clear();
 		Console.Write("\x1b[?2004h");
-
+		StartResizeWatcher();
+		currentState.Render();
 		while (true) {
 			ConsoleKeyInfo keyInfo = Console.ReadKey(intercept: true);
 
