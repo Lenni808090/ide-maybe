@@ -4,6 +4,7 @@ using System.IO;
 class StatusBar {
 	Buffer buffer;
 	Func<string> getCurrentFilePath;
+	Func<bool> getIsItDirty;
 	Searcher searcher;
 	Replacer replacer;
 
@@ -11,6 +12,7 @@ class StatusBar {
 
 	string search = "";
 	bool showReplace;
+	bool IsitDirty;
 	string replace = "";
 	int line;
 	int column;
@@ -20,27 +22,28 @@ class StatusBar {
 	long cachedFileSizeBytes = -1;
 	long cachedLastWriteUtcTicks = -1;
 
-	public StatusBar(Buffer buffer, Func<string> getCurrentFilePath, Searcher searcher, Replacer replacer) {
+	public StatusBar(Buffer buffer, Func<string> getCurrentFilePath, Func<bool> getIsItDirty, Searcher searcher, Replacer replacer) {
 		this.buffer = buffer;
 		this.searcher = searcher;
 		this.replacer = replacer;
+		this.getIsItDirty = getIsItDirty;
 		this.getCurrentFilePath = getCurrentFilePath;
 		this.filePath = getCurrentFilePath();
 		this.fileData = new FileData("", "0 KB", "Unknown");
 	}
 
-	public (string filePath, FileData fileData, int column, int line, StatusBarMode statusBarMode, string searchedChars, string replaceChars, bool showReplace) GetData() {
+	public (string filePath, FileData fileData, int column, int line, StatusBarMode statusBarMode, string searchedChars, string replaceChars, bool showReplace, bool IsitDirty) GetData() {
 		UpdateStatusBar();
 
-		return (filePath, fileData, column, line, statusBarMode, search, replace, showReplace);
+		return (filePath, fileData, column, line, statusBarMode, search, replace, showReplace, IsitDirty);
 	}
 
 	public void UpdateStatusBar() {
 		filePath = getCurrentFilePath();
+		IsitDirty = getIsItDirty();
 		RefreshFileDataIfNeeded();
 		column = buffer.column;
 		line = buffer.line;
-
 		if (statusBarMode == StatusBarMode.Normal) {
 			search = "";
 			replace = "";

@@ -307,7 +307,7 @@ class Render {
 	}
 
 	public void DrawStatusBar(SearchInputMode searchInputMode) {
-		var (filePath, fileData, column, line, statusBarMode, searchedChars, replaceChars, showReplace) = statusBar.GetData();
+		var (filePath, fileData, column, line, statusBarMode, searchedChars, replaceChars, showReplace, isDirty) = statusBar.GetData();
 		int width = Console.WindowWidth;
 		if (width <= 0) return;
 
@@ -340,6 +340,9 @@ class Render {
 		}
 		else {
 			leftSegments.Add(new StatusBarSegment($" {filePath} ", ConsoleColor.DarkBlue));
+			if (isDirty) {
+				leftSegments.Add(new StatusBarSegment(" [+] ", ConsoleColor.DarkYellow));
+			}
 			leftSegments.Add(new StatusBarSegment(
 				$" {fileData.Extension}  {fileData.Encoding}  {fileData.FileSize} ",
 				ConsoleColor.Blue

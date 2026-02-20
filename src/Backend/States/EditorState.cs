@@ -21,7 +21,7 @@ class EditorState : State {
 		searcher = new Searcher(buffer);
 		redoUndoHandler = new RedoUndoHandler(buffer);
 		replacer = new Replacer(buffer, searcher);
-		statusBar = new StatusBar(buffer, stateManager.GetCurrentFilePath, searcher, replacer);
+		statusBar = new StatusBar(buffer, stateManager.GetCurrentFilePath, redoUndoHandler.IsitDirty, searcher, replacer);
 
 		typedSearchedChar = new();
 		typedReplaceChar = new();
@@ -258,6 +258,7 @@ class EditorState : State {
 			}
 			else if (keyInfo.Key == ConsoleKey.A) {
 				stateManager.SaveCurrentFile(buffer.lines);
+				redoUndoHandler.MarkSaved();
 			}
 			else if (keyInfo.Key == ConsoleKey.Z) {
 				redoUndoHandler.Undo();
@@ -401,7 +402,10 @@ class EditorState : State {
 
 		}
 	}
-
+	public void MarkSaved() => redoUndoHandler.MarkSaved();
+	public void OnFileOpen() {
+		redoUndoHandler.ResetRedoHandler();
+	}
 	private void HandlePaste(List<char> chars) {
 		List<List<char>> pastedData = new List<List<char>>();
 		pastedData.Add(new List<char>());

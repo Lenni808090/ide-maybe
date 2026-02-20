@@ -11,6 +11,7 @@ class StateManager {
 	string? currentFilePath;
 	bool programmStateChanged;
 
+
 	public StateManager(string baseDir) {
 		buffer = new();
 		fileExplorerState = new(this, baseDir);
@@ -67,6 +68,7 @@ class StateManager {
 	public void OpenFileInEditor(string filePath) {
 		List<List<char>> newBuffer = fileManager.ReadFile(filePath);
 		buffer.LoadNewBuffer(newBuffer);
+		editorState.OnFileOpen();
 		currentFilePath = filePath;
 		SwitchState(ProgrammState.Editor);
 	}
@@ -78,6 +80,7 @@ class StateManager {
 	public void SaveCurrentFile(List<List<char>> lines) {
 		if (string.IsNullOrEmpty(currentFilePath)) return;
 		fileManager.SaveFile(currentFilePath, lines);
+		editorState.MarkSaved();
 	}
 
 	private void StartResizeWatcher() {
