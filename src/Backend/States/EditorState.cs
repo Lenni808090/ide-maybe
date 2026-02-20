@@ -412,6 +412,7 @@ class EditorState : State {
 			}
 			else if (searchInputMode == SearchInputMode.Replace) {
 				if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Shift)) {
+					if (searcher.totalFinds == 0) return;
 					redoUndoHandler.AddActionToUndo(new ReplaceAllWordsAction(searcher.findlings, buffer, replacer.charsUsedToReplace));
 					replacer.ReplaceAllFindlings();
 				}

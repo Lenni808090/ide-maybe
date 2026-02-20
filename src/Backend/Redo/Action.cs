@@ -367,6 +367,11 @@ class ReplaceAllWordsAction : Action {
 	}
 
 	public override void Undo(Buffer buffer) {
+		if (replaceWordsActions.Count == 0) {
+			buffer.ClampCursor();
+			return;
+		}
+
 		for (int i = 0; i < replaceWordsActions.Count; i++) {
 			replaceWordsActions[i].Undo(buffer);
 		}

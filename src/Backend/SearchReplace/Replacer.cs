@@ -37,11 +37,14 @@ class Replacer {
 		Findling? currentFindling;
 		for (int i = searcher.totalFinds - 1; i >= 0; i--) {
 			currentFindling = searcher.GetFindlingByInd(i);
-			if (currentFindling == null) return;
+			if (currentFindling == null) {
+				break;
+			}
 			searcher.RemoveFindlingByInd(i);
 			buffer.RemoveArea(currentFindling.Value.line, currentFindling.Value.line, currentFindling.Value.Start, currentFindling.Value.Start + currentFindling.Value.Length);
 			buffer.InsertCharsAtPos(currentFindling.Value.line, currentFindling.Value.Start, charsUsedToReplace);
 		}
+		searcher.SearchFile();
 		buffer.ClampCursor();
 	}
 
