@@ -1,14 +1,21 @@
+using System.Runtime.CompilerServices;
+
 class StateManager {
 	ProgrammState prevProgrammState;
 	ProgrammState programmState = ProgrammState.FileExplorer;
 	State currentState;
 	EditorState editorState;
 	FileExplorerState fileExplorerState;
+	Buffer buffer;
+	FileManager fileManager;
+	string? currentFilePath;
 	bool programmStateChanged;
 
-	public StateManager() {
-		fileExplorerState = new(this);
-		editorState = new(this);
+	public StateManager(string baseDir) {
+		buffer = new();
+		fileExplorerState = new(this, baseDir);
+		editorState = new(this, buffer);
+		fileManager = new();
 		currentState = fileExplorerState;
 		Console.TreatControlCAsInput = true;
 	}
@@ -54,6 +61,24 @@ class StateManager {
 
 	public void SwitchState(ProgrammState programmState) {
 		this.programmState = programmState;
+	}
+
+	public void OpenFileInEditor(string filePath) {
+		List<List<char>> newBuffer = fileManager.ReadFile(filePath);
+		buffer.lines = new(newBuffer);
+		buffer.column = 0;
+		buffer.line = 0;
+		currentFilePath = filePath;
+		SwitchState(ProgrammState.Editor);
+	}
+
+	public string GetCurrentFilePath() {
+		return currentFilePath ?? "";
+	}
+
+	public void SaveCurrentFile(List<List<char>> lines) {
+		if (string.IsNullOrEmpty(currentFilePath)) return;
+		fileManager.SaveFile(currentFilePath, lines);
 	}
 
 	private void StartResizeWatcher() {

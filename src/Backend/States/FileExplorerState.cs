@@ -3,9 +3,9 @@ class FileExplorerState : State {
 	FileExplorerRenderer fileExplorerRenderer;
 
 	StateManager stateManager;
-	public FileExplorerState(StateManager stateManager) {
+	public FileExplorerState(StateManager stateManager, string baseDir) {
 		this.stateManager = stateManager;
-		fileExplorer = new();
+		fileExplorer = new(baseDir);
 		fileExplorerRenderer = new(fileExplorer);
 	}
 	override public async Task handleInput(ConsoleKeyInfo keyInfo) {
@@ -19,7 +19,11 @@ class FileExplorerState : State {
 			return;
 		}
 		else if (keyInfo.Key == ConsoleKey.Enter) {
-			fileExplorer.MoveIntoEntry();
+			string? filePath = fileExplorer.MoveIntoEntry();
+			if (filePath is not null) {
+				stateManager.OpenFileInEditor(filePath);
+				return;
+			}
 			fileExplorerRenderer.UpdateCurrentDirInfo();
 			fileExplorerRenderer.ResetDirectoryView();
 			fileExplorerRenderer.RenderDirectroys();

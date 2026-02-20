@@ -3,15 +3,14 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 class FileExplorer {
 	string baseDir;
 	string currentDir;
-	string currentFile = "";
-
 	public int currentHoveredFile;
-	public FileExplorer() {
-		baseDir = @"C:\";
+	public FileExplorer(string baseDir) {
+		this.baseDir = baseDir;
 		currentDir = @"C:\";
 	}
 
@@ -67,17 +66,17 @@ class FileExplorer {
 		return (true, currentDirInfo.fileInfos[entryInd - dirCount]);
 	}
 
-	public bool MoveIntoEntry() {
+	public string? MoveIntoEntry() {
 		var entryToMoveIn = GetEntryByInd(currentHoveredFile);
 		string entryPath = Path.Combine(currentDir, entryToMoveIn.systemInfo.Name);
 
 		if (entryToMoveIn.isFile) {
-			return true;
+			return entryPath;
 		}
 
 		currentDir = entryPath;
 		currentHoveredFile = 0;
-		return false;
+		return null;
 	}
 
 	public void MoveOutOfEntry() {

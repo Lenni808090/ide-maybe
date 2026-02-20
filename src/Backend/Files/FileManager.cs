@@ -4,7 +4,6 @@ using System.IO;
 using System.Text;
 
 class FileManager {
-	public string currentFilePath = "";
 
 	public List<List<char>> ReadFile(string filePath) {
 		string[] lines = File.ReadAllLines(filePath);
@@ -15,7 +14,6 @@ class FileManager {
 		if (readFile.Count == 0) {
 			readFile.Add(new List<char>());
 		}
-		currentFilePath = filePath;
 		return readFile;
 	}
 

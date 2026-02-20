@@ -7,7 +7,6 @@ class EditorState : State {
 	StatusBar statusBar;
 	Replacer replacer;
 	Searcher searcher;
-	FileManager fileManager;
 	RedoUndoHandler redoUndoHandler;
 
 	StateManager stateManager;
@@ -16,14 +15,13 @@ class EditorState : State {
 	List<char> typedSearchedChar;
 	List<char> typedReplaceChar;
 
-	public EditorState(StateManager stateManager) {
+	public EditorState(StateManager stateManager, Buffer buffer) {
 		this.stateManager = stateManager;
-		buffer = new Buffer();
+		this.buffer = buffer;
 		searcher = new Searcher(buffer);
-		fileManager = new FileManager();
 		redoUndoHandler = new RedoUndoHandler(buffer);
 		replacer = new Replacer(buffer, searcher);
-		statusBar = new StatusBar(buffer, fileManager, searcher, replacer);
+		statusBar = new StatusBar(buffer, stateManager.GetCurrentFilePath, searcher, replacer);
 
 		typedSearchedChar = new();
 		typedReplaceChar = new();
@@ -241,7 +239,7 @@ class EditorState : State {
 				render.PrintScreen();
 			}
 			else if (keyInfo.Key == ConsoleKey.A) {
-				fileManager.SaveFile(fileManager.currentFilePath, buffer.lines);
+				stateManager.SaveCurrentFile(buffer.lines);
 			}
 			else if (keyInfo.Key == ConsoleKey.Z) {
 				redoUndoHandler.Undo();
