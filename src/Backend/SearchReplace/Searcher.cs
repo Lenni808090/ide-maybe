@@ -7,6 +7,7 @@ class Searcher {
 	public int totalFinds = 0;
 
 	public int? currentFindInd = null;
+	int indexToBeAssigned;
 	public List<List<Findling>> findlings;
 
 	public Searcher(Buffer buffer) {
@@ -142,6 +143,7 @@ class Searcher {
 		}
 
 		findlings.Clear();
+		indexToBeAssigned = 0;
 
 		for (int i = 0; i < buffer.lines.Count; i++) {
 			var lineFindlings = SearchLine(i);
@@ -187,7 +189,9 @@ class Searcher {
 						Start = i,
 						Length = length,
 						line = lineInd,
+						Index = indexToBeAssigned,
 					});
+					indexToBeAssigned++;
 				}
 			}
 		}

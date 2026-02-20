@@ -154,7 +154,7 @@ class Render {
 		else {
 			spans.AddRange(converter.ConvertTokensToSpans(simpleHighlighter.HighlightLine(line)));
 			if (isSearching) {
-				spans.AddRange(converter.ConvertFindlingsToSpans(findlings));
+				spans.AddRange(converter.ConvertFindlingsToSpans(findlings, searcher.currentFindInd ?? 0));
 			}
 			activeSpans = GetActiveSpans(spans, line.Count);
 			cachedLines[lineInd] = new LineData(hashedLine, hashedFindlings, isSearching, lineInd, activeSpans);
@@ -229,6 +229,7 @@ class Render {
 		else {
 			if (span.HasValue) {
 				return (span.Value.ForegroundColor, span.Value.BackgroundColor ?? ConsoleColor.Black);
+
 			}
 			else {
 				return (ConsoleColor.White, ConsoleColor.Black);
@@ -391,6 +392,7 @@ class Render {
 			foreach (Findling findling in findlings) {
 				hash = (hash * 31) + findling.Start;
 				hash = (hash * 31) + findling.Length;
+				hash = (hash * 31) + ((findling.Index == searcher.currentFindInd) ? 1 : 0);
 			}
 			hash = (hash * 31) + findlings.Count;
 			return hash;

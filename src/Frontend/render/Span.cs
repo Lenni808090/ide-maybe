@@ -8,10 +8,10 @@ struct Span {
 class Converter {
 
 
-	public List<Span> ConvertFindlingsToSpans(List<Findling> findlings) {
+	public List<Span> ConvertFindlingsToSpans(List<Findling> findlings, int currentFindlingInd) {
 		List<Span> spans = new();
 		foreach (Findling findling in findlings) {
-			spans.Add(FindlingToSpan(findling));
+			spans.Add(FindlingToSpan(findling, currentFindlingInd));
 		}
 		return spans;
 	}
@@ -41,12 +41,12 @@ class Converter {
 		};
 	}
 
-	Span FindlingToSpan(Findling f) {
+	Span FindlingToSpan(Findling f, int currentFindlingInd) {
 		return new Span {
 			Lenght = f.Length,
 			Start = f.Start,
 			ForegroundColor = ConsoleColor.Black,
-			BackgroundColor = ConsoleColor.Yellow,
+			BackgroundColor = f.Index == currentFindlingInd ? ConsoleColor.Yellow : ConsoleColor.DarkYellow,
 			Priority = 5,
 		};
 	}
