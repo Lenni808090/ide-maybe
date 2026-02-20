@@ -34,12 +34,6 @@ class EditorState : State {
 
 
 	override public async Task handleInput(ConsoleKeyInfo keyInfo) {
-		Console.Clear();
-
-		render.ResetView();
-		render.PrintScreen();
-		render.DrawStatusBar(searchInputMode);
-
 
 		if (keyInfo.Key == ConsoleKey.Q && keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)) {
 			stateManager.SwitchState(ProgrammState.CLosed);
@@ -429,8 +423,11 @@ class EditorState : State {
 	}
 
 	public override void Render() {
+		Console.CursorVisible = true;
 		render.ResetView();
 		render.PrintScreen();
+		statusBar.UpdateStatusBar();
+		render.DrawStatusBar(searchInputMode);
 	}
 }
 

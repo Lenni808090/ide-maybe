@@ -9,7 +9,6 @@ class FileExplorerState : State {
 		fileExplorerRenderer = new(fileExplorer);
 	}
 	override public async Task handleInput(ConsoleKeyInfo keyInfo) {
-		Console.Clear();
 		Console.CursorVisible = false;
 		fileExplorerRenderer.ResetDirectoryView();
 		fileExplorerRenderer.RenderDirectroys();
@@ -42,6 +41,7 @@ class FileExplorerState : State {
 			fileExplorerRenderer.RenderDirectroys();
 		}
 		else if (keyInfo.Key == ConsoleKey.Escape) {
+			stateManager.SwitchState(ProgrammState.Editor);
 			return;
 		}
 
@@ -49,6 +49,7 @@ class FileExplorerState : State {
 	}
 
 	public override void Render() {
+		Console.CursorVisible = false;
 		fileExplorerRenderer.ResetDirectoryView();
 		fileExplorerRenderer.RenderDirectroys();
 	}

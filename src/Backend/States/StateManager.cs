@@ -18,16 +18,23 @@ class StateManager {
 
 		while (true) {
 			ConsoleKeyInfo keyInfo = Console.ReadKey(intercept: true);
+
+			await currentState.handleInput(keyInfo);
+
 			if (programmState != prevProgrammState) {
 				programmStateChanged = true;
+				prevProgrammState = programmState;
 			}
 
 			if (programmStateChanged) {
+				Console.Clear();
 				if (programmState == ProgrammState.Editor) {
 					currentState = editorState;
+					currentState.Render();
 				}
 				else if (programmState == ProgrammState.FileExplorer) {
 					currentState = fileExplorerState;
+					currentState.Render();
 				}
 				else if (programmState == ProgrammState.CLosed) {
 					Console.Clear();
@@ -38,9 +45,6 @@ class StateManager {
 				}
 			}
 
-			await currentState.handleInput(keyInfo);
-
-			prevProgrammState = programmState;
 			if (programmStateChanged) {
 				programmStateChanged = false;
 			}
