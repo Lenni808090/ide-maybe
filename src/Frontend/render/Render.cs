@@ -392,7 +392,9 @@ class Render {
 			foreach (Findling findling in findlings) {
 				hash = (hash * 31) + findling.Start;
 				hash = (hash * 31) + findling.Length;
-				hash = (hash * 31) + ((findling.Index == searcher.currentFindInd) ? 1 : 0);
+				bool isCurrent = searcher.currentFindInd is int current && findling.Index == current;
+				hash = (hash * 31) ^ (isCurrent ? 234798 : 92487);
+
 			}
 			hash = (hash * 31) + findlings.Count;
 			return hash;

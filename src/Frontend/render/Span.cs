@@ -46,7 +46,7 @@ class Converter {
 			Lenght = f.Length,
 			Start = f.Start,
 			ForegroundColor = ConsoleColor.Black,
-			BackgroundColor = f.Index == currentFindlingInd ? ConsoleColor.Yellow : ConsoleColor.DarkYellow,
+			BackgroundColor = f.Index == currentFindlingInd ? ConsoleColor.DarkYellow : ConsoleColor.Yellow,
 			Priority = 5,
 		};
 	}
