@@ -66,9 +66,15 @@ class EditorState : State {
 				else {
 					redoUndoHandler.AddActionToUndo(new InsertCharAction(keyInfo.KeyChar, buffer.column, buffer.line));
 				}
+				bool hadSelection = buffer.isSelecting;
 				buffer.InsertChar(keyInfo.KeyChar);
-				render.ResetView();
-				render.PrintScreen();
+				if (hadSelection) {
+					render.ResetView();
+					render.PrintScreen();
+				}
+				else {
+					render.PrintLine(buffer.line, false);
+				}
 				return;
 			}
 		}
@@ -82,7 +88,7 @@ class EditorState : State {
 			}
 			buffer.NewLine();
 			render.ResetView();
-			render.PrintScreen();
+			render.PrintSection(Math.Max(render.topLine, buffer.line - 1));
 		}
 		else if (keyInfo.Key == ConsoleKey.Backspace) {
 			if (buffer.column == 0 && buffer.line == 0 && !buffer.isSelecting) return;
@@ -209,10 +215,16 @@ class EditorState : State {
 				else {
 					redoUndoHandler.AddActionToUndo(new InsertCharPairAction(keyInfo.KeyChar, buffer.column, buffer.line));
 				}
+				bool hadSelection = buffer.isSelecting;
 				buffer.InsertCharPair(keyInfo.KeyChar);
 
-				render.ResetView();
-				render.PrintScreen();
+				if (hadSelection) {
+					render.ResetView();
+					render.PrintScreen();
+				}
+				else {
+					render.PrintLine(buffer.line, false);
+				}
 			}
 			else {
 				if (buffer.isSelecting) {
@@ -221,9 +233,15 @@ class EditorState : State {
 				else {
 					redoUndoHandler.AddActionToUndo(new InsertCharAction(keyInfo.KeyChar, buffer.column, buffer.line));
 				}
+				bool hadSelection = buffer.isSelecting;
 				buffer.InsertChar(keyInfo.KeyChar);
-				render.ResetView();
-				render.PrintScreen();
+				if (hadSelection) {
+					render.ResetView();
+					render.PrintScreen();
+				}
+				else {
+					render.PrintLine(buffer.line, false);
+				}
 			}
 		}
 		else if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)) {

@@ -16,6 +16,9 @@ class StatusBar {
 	int column;
 	FileData fileData;
 	string filePath;
+	string? cachedFilePath;
+	long cachedFileSizeBytes = -1;
+	long cachedLastWriteUtcTicks = -1;
 
 	public StatusBar(Buffer buffer, Func<string> getCurrentFilePath, Searcher searcher, Replacer replacer) {
 		this.buffer = buffer;
@@ -34,7 +37,7 @@ class StatusBar {
 
 	public void UpdateStatusBar() {
 		filePath = getCurrentFilePath();
-		GetFileData();
+		RefreshFileDataIfNeeded();
 		column = buffer.column;
 		line = buffer.line;
 
@@ -56,14 +59,25 @@ class StatusBar {
 		}
 	}
 
-	public void GetFileData() {
+	private void RefreshFileDataIfNeeded() {
 		if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath)) {
 			fileData = new FileData("", "0 KB", "Unknown");
+			cachedFilePath = null;
+			cachedFileSizeBytes = -1;
+			cachedLastWriteUtcTicks = -1;
 			return;
 		}
 
 		FileInfo fileInfo = new FileInfo(filePath);
-		double sizeInKb = fileInfo.Length / 1024.0;
+		long currentSize = fileInfo.Length;
+		long currentLastWrite = fileInfo.LastWriteTimeUtc.Ticks;
+		bool sameFile = string.Equals(cachedFilePath, filePath, StringComparison.Ordinal);
+		bool unchanged = sameFile && cachedFileSizeBytes == currentSize && cachedLastWriteUtcTicks == currentLastWrite;
+		if (unchanged) {
+			return;
+		}
+
+		double sizeInKb = currentSize / 1024.0;
 		string fileSize = $"{sizeInKb:F2} KB";
 		string extension = Path.GetExtension(filePath);
 		string encoding;
@@ -73,6 +87,9 @@ class StatusBar {
 			encoding = reader.CurrentEncoding.EncodingName;
 		}
 
+		cachedFilePath = filePath;
+		cachedFileSizeBytes = currentSize;
+		cachedLastWriteUtcTicks = currentLastWrite;
 		fileData = new FileData(extension, fileSize, encoding);
 	}
 }

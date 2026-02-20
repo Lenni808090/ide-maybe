@@ -550,5 +550,15 @@ class Buffer {
 		prefColumn = column;
 		ClampCursor();
 	}
+
+	public void LoadNewBuffer(List<List<char>> newBuffer) {
+		var cleanedBuffer = ConvertTabsToSpace(newBuffer);
+		lines = new(cleanedBuffer);
+		line = 0;
+		column = 0;
+	}
+
+
+
 }
 

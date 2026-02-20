@@ -11,7 +11,7 @@ class FileExplorer {
 	public int currentHoveredFile;
 	public FileExplorer(string baseDir) {
 		this.baseDir = baseDir;
-		currentDir = @"C:\";
+		currentDir = this.baseDir;
 	}
 
 	public void MoveToNextEntry() {
@@ -82,7 +82,7 @@ class FileExplorer {
 	public void MoveOutOfEntry() {
 		var entry = new DirectoryInfo(currentDir);
 
-		if (entry.Parent != null) {
+		if (entry.Parent != null && entry.Parent.FullName != baseDir) {
 			currentDir = entry.Parent.FullName;
 			currentHoveredFile = 0;
 		}

@@ -1,9 +1,10 @@
-class SimpleHighlighter : IHighlighter {
-	private HashSet<string> keywords = new() { "if", "for", "while", "return", "public", "private", "int" };
+using System.Runtime.InteropServices;
 
+class SimpleHighlighter : IHighlighter {
 	public List<Token> HighlightLine(List<char> line) {
 		List<Token> tokens = new List<Token>();
 		int i = 0;
+		ReadOnlySpan<char> lineSpan = CollectionsMarshal.AsSpan(line);
 
 		while (i < line.Count) {
 			char c = line[i];
@@ -41,8 +42,8 @@ class SimpleHighlighter : IHighlighter {
 			if (char.IsLetter(c) || c == '_') {
 				int start = i;
 				while (i < line.Count && (char.IsLetterOrDigit(line[i]) || line[i] == '_')) i++;
-				string word = new string(line.GetRange(start, i - start).ToArray());
-				TokenKind kind = keywords.Contains(word) ? TokenKind.Keyword : TokenKind.Identifier;
+				ReadOnlySpan<char> word = lineSpan.Slice(start, i - start);
+				TokenKind kind = IsKeyword(word) ? TokenKind.Keyword : TokenKind.Identifier;
 				tokens.Add(new Token { Start = start, Length = i - start, tokenKind = kind });
 				continue;
 			}
@@ -52,6 +53,16 @@ class SimpleHighlighter : IHighlighter {
 		}
 
 		return tokens;
+	}
+
+	private static bool IsKeyword(ReadOnlySpan<char> word) {
+		return word.SequenceEqual("if")
+			|| word.SequenceEqual("for")
+			|| word.SequenceEqual("while")
+			|| word.SequenceEqual("return")
+			|| word.SequenceEqual("public")
+			|| word.SequenceEqual("private")
+			|| word.SequenceEqual("int");
 	}
 }
 

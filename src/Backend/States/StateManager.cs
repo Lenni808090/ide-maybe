@@ -65,9 +65,7 @@ class StateManager {
 
 	public void OpenFileInEditor(string filePath) {
 		List<List<char>> newBuffer = fileManager.ReadFile(filePath);
-		buffer.lines = new(newBuffer);
-		buffer.column = 0;
-		buffer.line = 0;
+		buffer.LoadNewBuffer(newBuffer);
 		currentFilePath = filePath;
 		SwitchState(ProgrammState.Editor);
 	}

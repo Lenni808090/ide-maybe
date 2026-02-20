@@ -59,7 +59,13 @@ class Render {
 
 
 	public void SetCursor(int lineInd) {
-		Console.SetCursorPosition(GetCursorXPos(lineInd), GetScreenLine(lineInd));
+		int maxX = Math.Max(0, Console.WindowWidth - 1);
+		int maxY = Math.Max(0, ContentHeight - 1);
+		int x = GetCursorXPos(lineInd);
+		int y = GetScreenLine(lineInd);
+		x = Math.Clamp(x, 0, maxX);
+		y = Math.Clamp(y, 0, maxY);
+		Console.SetCursorPosition(x, y);
 	}
 
 	public int GetScreenLine(int lineInd) {
@@ -109,7 +115,9 @@ class Render {
 
 
 	public void PrintLine(int lineInd, bool completeRedraw) {
-		Console.CursorVisible = false;
+		if (!completeRedraw) {
+			Console.CursorVisible = false;
+		}
 		PrintLineNumber(lineInd);
 		List<char> line = buffer.lines[lineInd];
 		List<Span> spans = new();
@@ -117,8 +125,10 @@ class Render {
 		if (searcher.isSearching) {
 			spans.AddRange(converter.ConvertFindlingsToSpans(searcher.findlings[lineInd]));
 		}
+		(int startLine, int endLine, int startColumn, int endColumn)? selectedArea = null;
 		if (buffer.isSelecting) {
-			var sel = GetSelectedArea();
+			selectedArea = GetSelectedArea();
+			var sel = selectedArea.Value;
 
 			int startLine = sel.startLine;
 			int endLine = sel.endLine;
@@ -150,7 +160,11 @@ class Render {
 
 		}
 
-		bool isEmptySelected = buffer.isSelecting && line.Count == 0 && lineInd >= GetSelectedArea().startLine && lineInd <= GetSelectedArea().endLine;
+		bool isEmptySelected = buffer.isSelecting
+			&& line.Count == 0
+			&& selectedArea.HasValue
+			&& lineInd >= selectedArea.Value.startLine
+			&& lineInd <= selectedArea.Value.endLine;
 
 		if (isEmptySelected) {
 			Console.BackgroundColor = ConsoleColor.Cyan;
@@ -158,21 +172,16 @@ class Render {
 			Console.Write(" ");
 			Console.BackgroundColor = ConsoleColor.Black;
 			Console.Write("\x1b[K");
-			SetCursor(lineInd);
+			if (!completeRedraw) {
+				SetCursor(lineInd);
+			}
 			if (!completeRedraw) Console.CursorVisible = true;
 			return;
 		}
+		Span?[] activeSpans = GetActiveSpans(spans, line.Count);
 
 		for (int i = 0; i < line.Count; i++) {
-			Span? active = null;
-
-			foreach (var s in spans) {
-				if (i >= s.Start && i < s.Start + s.Lenght) {
-					if (active == null || s.Priority > active.Value.Priority) {
-						active = s;
-					}
-				}
-			}
+			Span? active = activeSpans[i];
 
 			if (active.HasValue) {
 				Console.ForegroundColor = active.Value.ForegroundColor;
@@ -188,13 +197,16 @@ class Render {
 		Console.BackgroundColor = ConsoleColor.Black;
 		Console.ForegroundColor = ConsoleColor.White;
 		Console.Write("\x1b[K");
-		SetCursor(lineInd);
+		if (!completeRedraw) {
+			SetCursor(lineInd);
+		}
 		if (!completeRedraw) {
 			Console.CursorVisible = true;
 		}
 	}
 
 	public void PrintSection(int startLineInd) {
+		Console.CursorVisible = false;
 		for (int i = startLineInd; i < bottomLine; i++) {
 			PrintLine(i, true);
 		}
@@ -206,6 +218,21 @@ class Render {
 		}
 		SetCursor(buffer.line);
 		Console.CursorVisible = true;
+	}
+
+	private static Span?[] GetActiveSpans(List<Span> spans, int lineLength) {
+		Span?[] active = new Span?[lineLength];
+		foreach (var span in spans) {
+			int start = Math.Max(0, span.Start);
+			int end = Math.Min(lineLength, span.Start + span.Lenght);
+			for (int i = start; i < end; i++) {
+				Span? current = active[i];
+				if (!current.HasValue || span.Priority > current.Value.Priority) {
+					active[i] = span;
+				}
+			}
+		}
+		return active;
 	}
 
 	public void PrintScreen() {
