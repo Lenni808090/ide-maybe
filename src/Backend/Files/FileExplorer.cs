@@ -13,6 +13,24 @@ class FileExplorer {
 		currentDir = @"C:\";
 	}
 
+	public void moveToNextEntry() {
+		var dirInfo = getInfoAboutCurrentDir();
+		int totalEntryCount = getTotalEntriesCount(dirInfo.directoryInfos, dirInfo.fileInfos);
+		if (currentHoveredFile == totalEntryCount - 1) {
+			return;
+		}
+		currentHoveredFile++;
+	}
+
+
+	public void moveToPrevEntry() {
+		var dirInfo = getInfoAboutCurrentDir();
+		int totalEntryCount = getTotalEntriesCount(dirInfo.directoryInfos, dirInfo.fileInfos);
+		if (currentHoveredFile == 0) {
+			return;
+		}
+		currentHoveredFile--;
+	}
 	public (List<DirectoryInfo> directoryInfos, List<FileInfo> fileInfos) getInfoAboutDir(string currentDir) {
 		var currentDirInfo = new DirectoryInfo(currentDir);
 		List<DirectoryInfo> directoryInfos = new();

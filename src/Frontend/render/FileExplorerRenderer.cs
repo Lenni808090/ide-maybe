@@ -48,11 +48,15 @@ class FileExplorerRenderer {
 				Console.BackgroundColor = ConsoleColor.Black;
 			}
 			if (i < currentDirInfo.directoryInfos.Count) {
-				Console.Write(currentDirInfo.directoryInfos[i].Name);
+				Console.ForegroundColor = ConsoleColor.DarkRed;
+				Console.Write(currentDirInfo.directoryInfos[i].Name + "/");
 			}
 			else {
-				Console.Write("--" + currentDirInfo.fileInfos[i - currentDirInfo.directoryInfos.Count]);
+				Console.ForegroundColor = ConsoleColor.White;
+				Console.Write("-" + currentDirInfo.fileInfos[i - currentDirInfo.directoryInfos.Count].Name);
 			}
+			Console.ForegroundColor = ConsoleColor.Black;
+			Console.Write("\x1b[K");
 		}
 
 	}

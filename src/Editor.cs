@@ -43,6 +43,7 @@ class Editor {
 
 	public async Task<bool> startFileExploring() {
 		Console.Clear();
+		Console.CursorVisible = false;
 		fileExplorerRenderer.resetDirectoryView();
 		fileExplorerRenderer.renderDirectroys();
 
@@ -53,11 +54,19 @@ class Editor {
 			if (keyInfo.Key == ConsoleKey.Q && keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)) {
 				return true;
 			}
-
+			else if (keyInfo.Key == ConsoleKey.DownArrow) {
+				fileExplorer.moveToNextEntry();
+				fileExplorerRenderer.resetDirectoryView();
+				fileExplorerRenderer.renderDirectroys();
+			}
+			else if (keyInfo.Key == ConsoleKey.UpArrow) {
+				fileExplorer.moveToPrevEntry();
+				fileExplorerRenderer.resetDirectoryView();
+				fileExplorerRenderer.renderDirectroys();
+			}
 			else if (keyInfo.Key == ConsoleKey.Escape) {
 				return false;
 			}
-
 
 		}
 	}
