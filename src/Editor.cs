@@ -86,10 +86,6 @@ class Editor {
 
 	public async Task StartEditor() {
 		Console.Clear();
-		Console.Write("\x1b[?2004h");
-
-		buffer.lines = fileManager.ReadFile(@"C:\Users\leona\source\repos\ide-maybe\test.txt");
-
 
 		render.ResetView();
 		render.PrintScreen();

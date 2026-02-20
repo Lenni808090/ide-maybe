@@ -7,7 +7,7 @@ using System.Linq;
 class FileExplorer {
 	string baseDir;
 	string currentDir;
-	string currentFile;
+	string currentFile = "";
 
 	public int currentHoveredFile;
 	public FileExplorer() {
