@@ -54,6 +54,18 @@ class Editor {
 			if (keyInfo.Key == ConsoleKey.Q && keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)) {
 				return true;
 			}
+			else if (keyInfo.Key == ConsoleKey.Enter) {
+				fileExplorer.MoveIntoEntry();
+				fileExplorerRenderer.UpdateCurrentDirInfo();
+				fileExplorerRenderer.ResetDirectoryView();
+				fileExplorerRenderer.RenderDirectroys();
+			}
+			else if (keyInfo.Key == ConsoleKey.Backspace) {
+				fileExplorer.MoveOutOfEntry();
+				fileExplorerRenderer.UpdateCurrentDirInfo();
+				fileExplorerRenderer.ResetDirectoryView();
+				fileExplorerRenderer.RenderDirectroys();
+			}
 			else if (keyInfo.Key == ConsoleKey.DownArrow) {
 				fileExplorer.MoveToNextEntry();
 				fileExplorerRenderer.ResetDirectoryView();

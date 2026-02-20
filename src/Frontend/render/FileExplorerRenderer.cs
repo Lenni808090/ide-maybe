@@ -40,27 +40,43 @@ class FileExplorerRenderer {
 	}
 
 	public void RenderDirectroys() {
-		for (int i = topDirectoryInd; i < bottomDirectoryInd; i++) {
-			Console.SetCursorPosition(0, GetScreenLine(i));
-			if (fileExplorer.currentHoveredFile == i) {
-				Console.BackgroundColor = ConsoleColor.Cyan;
+		if (bottomDirectoryInd == 0) {
+			Console.SetCursorPosition(0, 0);
+			Console.Write("Empty");
+			for (int i = 1; i < Console.WindowHeight; i++) {
+				Console.SetCursorPosition(0, GetScreenLine(i));
+				Console.Write("\x1b[K");
 			}
-			else {
-				Console.BackgroundColor = ConsoleColor.Black;
-			}
-			var entry = fileExplorer.GetEntryByInd(i);
-			if (!entry.isFile) {
-				Console.ForegroundColor = ConsoleColor.DarkRed;
-				Console.Write(entry.systemInfo.Name + "/");
-			}
-			else {
-				Console.ForegroundColor = ConsoleColor.White;
-				Console.Write("-" + entry.systemInfo.Name);
-			}
-			Console.ForegroundColor = ConsoleColor.Black;
-			Console.Write("\x1b[K");
 		}
-
+		else {
+			for (int i = topDirectoryInd; i < bottomDirectoryInd; i++) {
+				Console.SetCursorPosition(0, GetScreenLine(i));
+				if (fileExplorer.currentHoveredFile == i) {
+					Console.BackgroundColor = ConsoleColor.Cyan;
+				}
+				else {
+					Console.BackgroundColor = ConsoleColor.Black;
+				}
+				var entry = fileExplorer.GetEntryByInd(i);
+				if (!entry.isFile) {
+					Console.ForegroundColor = ConsoleColor.DarkRed;
+					Console.Write(entry.systemInfo.Name + "/");
+				}
+				else {
+					Console.ForegroundColor = ConsoleColor.White;
+					Console.Write("-" + entry.systemInfo.Name);
+				}
+				Console.ForegroundColor = ConsoleColor.White;
+				Console.BackgroundColor = ConsoleColor.Black;
+				Console.Write("\x1b[K");
+			}
+			if (bottomDirectoryInd < Console.WindowHeight - 1) {
+				for (int i = bottomDirectoryInd; i < Console.WindowHeight; i++) {
+					Console.SetCursorPosition(0, GetScreenLine(i));
+					Console.Write("\x1b[K");
+				}
+			}
+		}
 	}
 
 }

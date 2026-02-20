@@ -7,6 +7,7 @@ using System.Linq;
 class FileExplorer {
 	string baseDir;
 	string currentDir;
+	string currentFile;
 
 	public int currentHoveredFile;
 	public FileExplorer() {
@@ -66,17 +67,26 @@ class FileExplorer {
 		return (true, currentDirInfo.fileInfos[entryInd - dirCount]);
 	}
 
-	public (bool isFile, string currentDir) MoveIntoEntry() {
+	public bool MoveIntoEntry() {
 		var entryToMoveIn = GetEntryByInd(currentHoveredFile);
 		string entryPath = Path.Combine(currentDir, entryToMoveIn.systemInfo.Name);
 
 		if (entryToMoveIn.isFile) {
-			return (true, entryPath);
+			return true;
 		}
 
 		currentDir = entryPath;
 		currentHoveredFile = 0;
-		return (false, currentDir);
+		return false;
+	}
+
+	public void MoveOutOfEntry() {
+		var entry = new DirectoryInfo(currentDir);
+
+		if (entry.Parent != null) {
+			currentDir = entry.Parent.FullName;
+			currentHoveredFile = 0;
+		}
 	}
 
 	public (List<DirectoryInfo> directoryInfos, List<FileInfo> fileInfos) GetInfoAboutCurrentDir() {
