@@ -1,5 +1,8 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics;
+using System.Reflection.Emit;
+using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 using System.Security.AccessControl;
 using System.Threading.Tasks.Dataflow;
 using Microsoft.VisualBasic;
@@ -12,6 +15,8 @@ class Render {
 	SimpleHighlighter simpleHighlighter;
 	Searcher searcher;
 	Converter converter;
+
+	Dictionary<int, LineData> cachedLines;
 	public int topLine = 0;
 	public int bottomLine = 0;
 
@@ -27,6 +32,7 @@ class Render {
 		statusBarRenderer = new StatusBarRenderer();
 		simpleHighlighter = new SimpleHighlighter();
 		converter = new();
+		cachedLines = new();
 		currentDistFromEdge = 4;
 	}
 
@@ -120,52 +126,42 @@ class Render {
 		}
 		PrintLineNumber(lineInd);
 		List<char> line = buffer.lines[lineInd];
+		ReadOnlySpan<char> spanLine = CollectionsMarshal.AsSpan(line);
 		List<Span> spans = new();
-		spans.AddRange(converter.ConvertTokensToSpans(simpleHighlighter.HighlightLine(line)));
-		if (searcher.isSearching) {
-			spans.AddRange(converter.ConvertFindlingsToSpans(searcher.findlings[lineInd]));
+
+		Span?[] activeSpans;
+
+		(int startLine, int endLine, int startColumn, int endColumn)? selectedArea = GetSelectedArea();
+		(int selectStart, int selectLength) = GetSelectionForLine(lineInd, line);
+
+
+
+
+		bool isSearching = searcher.isSearching;
+		bool hasCache = cachedLines.TryGetValue(lineInd, out LineData? cachedLine);
+		int hashedLine = HashLine(line);
+		List<Findling> findlings = lineInd < searcher.findlings.Count
+			? searcher.findlings[lineInd]
+			: new List<Findling>();
+		int hashedFindlings = HashFindlings(findlings);
+
+
+		bool canReuse = hasCache && cachedLine is not null && cachedLine.isSearching == isSearching && cachedLine.lineHash == hashedLine && cachedLine.findlingHash == hashedFindlings;
+
+		if (canReuse && cachedLine is not null) {
+			activeSpans = cachedLine.spans;
 		}
-		(int startLine, int endLine, int startColumn, int endColumn)? selectedArea = null;
-		if (buffer.isSelecting) {
-			selectedArea = GetSelectedArea();
-			var sel = selectedArea.Value;
-
-			int startLine = sel.startLine;
-			int endLine = sel.endLine;
-			int startCol = sel.startColumn;
-			int endCol = sel.endColumn;
-
-			int selectStart = 0;
-			int selectLength = 0;
-
-			if (lineInd < startLine || lineInd > endLine) {
+		else {
+			spans.AddRange(converter.ConvertTokensToSpans(simpleHighlighter.HighlightLine(line)));
+			if (isSearching) {
+				spans.AddRange(converter.ConvertFindlingsToSpans(findlings));
 			}
-			else if (startLine == endLine) {
-				selectStart = startCol;
-				selectLength = endCol - startCol;
-			}
-			else if (lineInd == startLine) {
-				selectStart = startCol;
-				selectLength = line.Count - startCol;
-			}
-			else if (lineInd == endLine) {
-				selectStart = 0;
-				selectLength = endCol;
-			}
-			else {
-				selectStart = 0;
-				selectLength = line.Count;
-			}
-			spans.Add(converter.ConvertSelectionToSpan(selectStart, selectLength));
-
+			activeSpans = GetActiveSpans(spans, line.Count);
+			cachedLines[lineInd] = new LineData(hashedLine, hashedFindlings, isSearching, lineInd, activeSpans);
 		}
 
-		bool isEmptySelected = buffer.isSelecting
-			&& line.Count == 0
-			&& selectedArea.HasValue
-			&& lineInd >= selectedArea.Value.startLine
-			&& lineInd <= selectedArea.Value.endLine;
 
+		bool isEmptySelected = buffer.isSelecting && line.Count == 0 && selectedArea.HasValue && lineInd >= selectedArea.Value.startLine && lineInd <= selectedArea.Value.endLine;
 		if (isEmptySelected) {
 			Console.BackgroundColor = ConsoleColor.Cyan;
 			Console.ForegroundColor = ConsoleColor.Black;
@@ -178,22 +174,38 @@ class Render {
 			if (!completeRedraw) Console.CursorVisible = true;
 			return;
 		}
-		Span?[] activeSpans = GetActiveSpans(spans, line.Count);
-
-		for (int i = 0; i < line.Count; i++) {
-			Span? active = activeSpans[i];
-
-			if (active.HasValue) {
-				Console.ForegroundColor = active.Value.ForegroundColor;
-				Console.BackgroundColor = active.Value.BackgroundColor ?? ConsoleColor.Black;
-			}
-			else {
-				Console.ForegroundColor = ConsoleColor.Gray;
-				Console.BackgroundColor = ConsoleColor.Black;
-			}
-
-			Console.Write(line[i]);
+		else if (line.Count == 0) {
+			Console.BackgroundColor = ConsoleColor.Black;
+			Console.ForegroundColor = ConsoleColor.White;
+			Console.Write("\x1b[K");
+			if (!completeRedraw) SetCursor(lineInd);
+			if (!completeRedraw) Console.CursorVisible = true;
+			return;
 		}
+
+		int flushStart = 0;
+		var current = activeSpans[0];
+		var runStyle = GetFinalStyle(current, isSelected(0, selectStart, selectLength));
+		for (int i = 0; i < line.Count; i++) {
+
+
+			if (i + 1 < line.Count) {
+				var next = activeSpans[i + 1];
+				var nextStyle = GetFinalStyle(next, isSelected(i + 1, selectStart, selectLength));
+
+				if (!StylesEqual(runStyle, nextStyle)) {
+					Console.ForegroundColor = runStyle.fc;
+					Console.BackgroundColor = runStyle.bc;
+					Console.Write(spanLine.Slice(flushStart, i - flushStart + 1));
+					runStyle = nextStyle;
+					flushStart = i + 1;
+				}
+			}
+		}
+		Console.ForegroundColor = runStyle.fc;
+		Console.BackgroundColor = runStyle.bc;
+		Console.Write(spanLine.Slice(flushStart, line.Count - flushStart));
+
 		Console.BackgroundColor = ConsoleColor.Black;
 		Console.ForegroundColor = ConsoleColor.White;
 		Console.Write("\x1b[K");
@@ -203,6 +215,61 @@ class Render {
 		if (!completeRedraw) {
 			Console.CursorVisible = true;
 		}
+	}
+
+
+	public bool isSelected(int i, int selectStart, int selectLength) {
+		if (selectStart == 0 && selectLength == 0) return false;
+		return i >= selectStart && i < selectStart + selectLength && buffer.isSelecting;
+	}
+	static public (ConsoleColor fc, ConsoleColor bc) GetFinalStyle(Span? span, bool selected) {
+		if (selected) {
+			return (ConsoleColor.Black, ConsoleColor.Cyan);
+		}
+		else {
+			if (span.HasValue) {
+				return (span.Value.ForegroundColor, span.Value.BackgroundColor ?? ConsoleColor.Black);
+			}
+			else {
+				return (ConsoleColor.White, ConsoleColor.Black);
+			}
+		}
+	}
+
+	static public bool StylesEqual((ConsoleColor fc, ConsoleColor bc) firstStyle, (ConsoleColor fc, ConsoleColor bc) secoundStyle) {
+		return firstStyle.fc == secoundStyle.fc && firstStyle.bc == secoundStyle.bc;
+	}
+
+	private (int selectStart, int selectLength) GetSelectionForLine(int lineInd, List<char> line) {
+		if (!buffer.isSelecting) return (0, 0);
+
+		var (startLine, endLine, startColumn, endColumn) = GetSelectedArea();
+
+		int selectStart = 0;
+		int selectLength = 0;
+
+		if (lineInd < startLine || lineInd > endLine) {
+			selectStart = 0;
+			selectLength = 0;
+		}
+		else if (startLine == endLine) {
+			selectStart = startColumn;
+			selectLength = endColumn - startColumn;
+		}
+		else if (lineInd == startLine) {
+			selectStart = startColumn;
+			selectLength = line.Count - startColumn;
+		}
+		else if (lineInd == endLine) {
+			selectStart = 0;
+			selectLength = endColumn;
+		}
+		else {
+			selectStart = 0;
+			selectLength = line.Count;
+		}
+
+		return (selectStart, selectLength);
 	}
 
 	public void PrintSection(int startLineInd) {
@@ -293,5 +360,42 @@ class Render {
 		Console.CursorVisible = true;
 	}
 
+	int HashLine(List<char> line) {
+		unchecked {
+			int hash = 17;
+			foreach (char c in line) {
+				hash = (hash * 31) + c;
+			}
+			return hash;
+		}
+	}
+
+	int HashFindlings(List<Findling> findlings) {
+		unchecked {
+			int hash = 17;
+			foreach (Findling findling in findlings) {
+				hash = (hash * 31) + findling.Start;
+				hash = (hash * 31) + findling.Length;
+			}
+			hash = (hash * 31) + findlings.Count;
+			return hash;
+		}
+	}
+
 }
 
+class LineData {
+	public int lineHash;
+	public int findlingHash;
+
+	public bool isSearching;
+	public int lineInd;
+	public Span?[] spans = [];
+	public LineData(int lineHash, int findlingHash, bool isSearching, int lineInd, Span?[] spans) {
+		this.lineHash = lineHash;
+		this.findlingHash = findlingHash;
+		this.isSearching = isSearching;
+		this.lineInd = lineInd;
+		this.spans = spans;
+	}
+}
