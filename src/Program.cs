@@ -4,8 +4,8 @@ using System.ComponentModel;
 
 class Program {
 	static async Task Main() {
-		Editor editor = new Editor();
-		await editor.StartEditor();
+		StateManager stateManager = new();
+		await stateManager.StartStateManager();
 	}
 
 }

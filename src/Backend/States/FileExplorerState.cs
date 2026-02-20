@@ -1,7 +1,10 @@
 class FileExplorerState : State {
 	FileExplorer fileExplorer;
 	FileExplorerRenderer fileExplorerRenderer;
-	public FileExplorerState() {
+
+	StateManager stateManager;
+	public FileExplorerState(StateManager stateManager) {
+		this.stateManager = stateManager;
 		fileExplorer = new();
 		fileExplorerRenderer = new(fileExplorer);
 	}
@@ -13,6 +16,7 @@ class FileExplorerState : State {
 
 
 		if (keyInfo.Key == ConsoleKey.Q && keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)) {
+			stateManager.SwitchState(ProgrammState.CLosed);
 			return;
 		}
 		else if (keyInfo.Key == ConsoleKey.Enter) {
@@ -42,5 +46,10 @@ class FileExplorerState : State {
 		}
 
 
+	}
+
+	public override void Render() {
+		fileExplorerRenderer.ResetDirectoryView();
+		fileExplorerRenderer.RenderDirectroys();
 	}
 }

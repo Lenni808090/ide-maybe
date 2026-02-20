@@ -7,11 +7,12 @@ class StateManager {
 	bool programmStateChanged;
 
 	public StateManager() {
-		fileExplorerState = new();
+		fileExplorerState = new(this);
 		editorState = new(this);
 		currentState = fileExplorerState;
+		Console.TreatControlCAsInput = true;
 	}
-	public void StartStateManager() {
+	public async Task StartStateManager() {
 		Console.Clear();
 		Console.Write("\x1b[?2004h");
 
@@ -25,12 +26,19 @@ class StateManager {
 				if (programmState == ProgrammState.Editor) {
 					currentState = editorState;
 				}
-				else {
+				else if (programmState == ProgrammState.FileExplorer) {
 					currentState = fileExplorerState;
+				}
+				else if (programmState == ProgrammState.CLosed) {
+					Console.Clear();
+					Console.Write("\x1b[?2004l");
+					Console.CursorVisible = true;
+					Console.WriteLine("till next time");
+					break;
 				}
 			}
 
-			currentState.handleInput(keyInfo);
+			await currentState.handleInput(keyInfo);
 
 			prevProgrammState = programmState;
 			if (programmStateChanged) {
@@ -53,7 +61,7 @@ class StateManager {
 					Console.Clear();
 					prevHeight = Console.WindowHeight;
 					prevWidth = Console.WindowWidth;
-
+					currentState.Render();
 				}
 
 				await Task.Delay(50);
@@ -65,4 +73,6 @@ class StateManager {
 enum ProgrammState {
 	Editor,
 	FileExplorer,
+
+	CLosed,
 }

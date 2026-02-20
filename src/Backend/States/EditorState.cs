@@ -28,15 +28,9 @@ class EditorState : State {
 		typedSearchedChar = new();
 		typedReplaceChar = new();
 		render = new Render(buffer, searcher, statusBar);
-
-		Console.CancelKeyPress += async (s, e) => {
-			e.Cancel = true;
-			await buffer.CopyLines();
-		};
 	}
 
 	int prevTopLine;
-
 
 
 	override public async Task handleInput(ConsoleKeyInfo keyInfo) {
@@ -48,10 +42,7 @@ class EditorState : State {
 
 
 		if (keyInfo.Key == ConsoleKey.Q && keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)) {
-			Console.Clear();
-			Console.Write("\x1b[?2004l");
-			Console.CursorVisible = true;
-			Console.WriteLine("till next time");
+			stateManager.SwitchState(ProgrammState.CLosed);
 			return;
 		}
 
@@ -437,6 +428,9 @@ class EditorState : State {
 		render.PrintScreen();
 	}
 
-
+	public override void Render() {
+		render.ResetView();
+		render.PrintScreen();
+	}
 }
 
