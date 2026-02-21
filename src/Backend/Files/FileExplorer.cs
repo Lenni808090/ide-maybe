@@ -23,7 +23,6 @@ class FileExplorer {
 		currentHoveredFile++;
 	}
 
-
 	public void MoveToPrevEntry() {
 		var dirInfo = GetInfoAboutCurrentDir();
 		int totalEntryCount = GetTotalEntriesCount(dirInfo.directoryInfos, dirInfo.fileInfos);
