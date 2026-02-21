@@ -104,9 +104,16 @@ class EditorState : State {
 			else {
 				redoUndoHandler.AddActionToUndo(new NewLineAction(buffer.line, buffer.column, buffer));
 			}
+			int previousTopLine = render.topLine;
 			buffer.NewLine();
 			render.ResetView();
-			render.PrintSection(Math.Max(render.topLine, buffer.line - 1));
+			if (previousTopLine != render.topLine) {
+				render.PrintScreen();
+			}
+			else {
+				render.PrintSection(Math.Max(render.topLine, buffer.line - 1));
+			}
+			prevTopLine = render.topLine;
 		}
 		else if (keyInfo.Key == ConsoleKey.Backspace) {
 			if (buffer.column == 0 && buffer.line == 0 && !buffer.isSelecting) return;
