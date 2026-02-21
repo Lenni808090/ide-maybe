@@ -131,7 +131,8 @@ class Render {
 
 		Span?[] activeSpans;
 
-		(int startLine, int endLine, int startColumn, int endColumn)? selectedArea = GetSelectedArea();
+		(int startLine, int endLine, int startColumn, int endColumn)? selectedArea =
+			buffer.isSelecting ? GetSelectedArea() : null;
 		(int selectStart, int selectLength) = GetSelectionForLine(lineInd, line);
 
 
@@ -238,9 +239,8 @@ class Render {
 	}
 
 	public void ScrollViewportIfPoss(int prevTopLine) {
-		// Selection/search overlays can change styling across many lines, so incremental
-		// one-line repaint is not sufficient; keep correctness with a full redraw.
-		if (buffer.isSelecting || searcher.isSearching) {
+		// Search overlays can change styling across many lines, so keep full redraw there.
+		if (searcher.isSearching) {
 			PrintScreen();
 			return;
 		}
@@ -341,6 +341,31 @@ class Render {
 
 	public void PrintScreen() {
 		PrintSection(topLine);
+	}
+
+	public void RedrawVisibleRanges(List<(int startLine, int endLine)> ranges) {
+		if (ranges.Count == 0) {
+			SetCursor(buffer.line);
+			Console.CursorVisible = true;
+			return;
+		}
+
+		Console.CursorVisible = false;
+		SortedSet<int> linesToRedraw = new();
+		foreach (var (startLine, endLine) in ranges) {
+			int visibleStart = Math.Max(startLine, topLine);
+			int visibleEnd = Math.Min(endLine, bottomLine - 1);
+			if (visibleStart > visibleEnd) continue;
+
+			for (int line = visibleStart; line <= visibleEnd; line++) {
+				linesToRedraw.Add(line);
+			}
+		}
+		foreach (int line in linesToRedraw) {
+			PrintLine(line, true);
+		}
+		SetCursor(buffer.line);
+		Console.CursorVisible = true;
 	}
 
 

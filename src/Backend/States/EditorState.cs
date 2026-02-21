@@ -53,12 +53,21 @@ class EditorState : State {
 			return;
 		}
 
-		if (Console.KeyAvailable) {
+		bool isTextKey =
+			keyInfo.KeyChar != '\0'
+			&& !char.IsControl(keyInfo.KeyChar)
+			&& !keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)
+			&& !keyInfo.Modifiers.HasFlag(ConsoleModifiers.Alt);
+
+		if (isTextKey && Console.KeyAvailable) {
 			List<char> bufferedChars = new List<char>();
 			bufferedChars.Add(keyInfo.KeyChar);
 
 			while (Console.KeyAvailable) {
 				var nextKey = Console.ReadKey(intercept: true);
+				if (nextKey.KeyChar == '\0' || char.IsControl(nextKey.KeyChar)) {
+					continue;
+				}
 				bufferedChars.Add(nextKey.KeyChar);
 			}
 
@@ -127,18 +136,19 @@ class EditorState : State {
 			}
 		}
 		else if (keyInfo.Key == ConsoleKey.LeftArrow) {
+			var previousSelection = GetSelectionAreaOrNull();
+			bool selectionChanged = false;
 			if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Shift)) {
 				if (!buffer.isSelecting) buffer.StartSelecting();
 				buffer.MoveLeft();
 				buffer.UpdateSelection();
-				render.PrintScreen();
+				selectionChanged = true;
 			}
 			else {
 				if (buffer.isSelecting) {
 					buffer.MoveLeftWhileSelecting();
 					buffer.StopSelecting();
-					render.ResetView();
-					render.PrintScreen();
+					selectionChanged = true;
 				}
 				else {
 					buffer.MoveLeft();
@@ -146,23 +156,34 @@ class EditorState : State {
 			}
 
 			render.ResetView();
-			if (prevTopLine != render.topLine) render.ScrollViewportIfPoss(prevTopLine);
+			if (selectionChanged) {
+				if (prevTopLine != render.topLine) {
+					render.ScrollViewportIfPoss(prevTopLine);
+				}
+				var currentSelection = GetSelectionAreaOrNull();
+				var dirtyRanges = BuildSelectionDirtyRanges(previousSelection, currentSelection, buffer.line);
+				render.RedrawVisibleRanges(dirtyRanges);
+			}
+			else if (prevTopLine != render.topLine) {
+				render.ScrollViewportIfPoss(prevTopLine);
+			}
 			prevTopLine = render.topLine;
-			render.SetCursor(buffer.line);
+			if (!selectionChanged) render.SetCursor(buffer.line);
 		}
 		else if (keyInfo.Key == ConsoleKey.RightArrow) {
+			var previousSelection = GetSelectionAreaOrNull();
+			bool selectionChanged = false;
 			if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Shift)) {
 				if (!buffer.isSelecting) buffer.StartSelecting();
 				buffer.MoveRight();
 				buffer.UpdateSelection();
-				render.PrintScreen();
+				selectionChanged = true;
 			}
 			else {
 				if (buffer.isSelecting) {
 					buffer.MoveRightWhileSelecting();
 					buffer.StopSelecting();
-					render.ResetView();
-					render.PrintScreen();
+					selectionChanged = true;
 				}
 				else {
 					buffer.MoveRight();
@@ -170,51 +191,83 @@ class EditorState : State {
 			}
 
 			render.ResetView();
-			if (prevTopLine != render.topLine) render.ScrollViewportIfPoss(prevTopLine);
+			if (selectionChanged) {
+				if (prevTopLine != render.topLine) {
+					render.ScrollViewportIfPoss(prevTopLine);
+				}
+				var currentSelection = GetSelectionAreaOrNull();
+				var dirtyRanges = BuildSelectionDirtyRanges(previousSelection, currentSelection, buffer.line);
+				render.RedrawVisibleRanges(dirtyRanges);
+			}
+			else if (prevTopLine != render.topLine) {
+				render.ScrollViewportIfPoss(prevTopLine);
+			}
 			prevTopLine = render.topLine;
-			render.SetCursor(buffer.line);
+			if (!selectionChanged) render.SetCursor(buffer.line);
 		}
 		else if (keyInfo.Key == ConsoleKey.UpArrow) {
+			var previousSelection = GetSelectionAreaOrNull();
+			bool selectionChanged = false;
 			if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Shift)) {
 				if (!buffer.isSelecting) buffer.StartSelecting();
 				buffer.MoveUp();
 				buffer.UpdateSelection();
-				render.PrintScreen();
+				selectionChanged = true;
 			}
 			else {
 				buffer.MoveUp();
 				if (buffer.isSelecting) {
 					buffer.StopSelecting();
-					render.ResetView();
-					render.PrintScreen();
+					selectionChanged = true;
 				}
 			}
 
 			render.ResetView();
-			if (prevTopLine != render.topLine) render.ScrollViewportIfPoss(prevTopLine);
+			if (selectionChanged) {
+				if (prevTopLine != render.topLine) {
+					render.ScrollViewportIfPoss(prevTopLine);
+				}
+				var currentSelection = GetSelectionAreaOrNull();
+				var dirtyRanges = BuildSelectionDirtyRanges(previousSelection, currentSelection, buffer.line);
+				render.RedrawVisibleRanges(dirtyRanges);
+			}
+			else if (prevTopLine != render.topLine) {
+				render.ScrollViewportIfPoss(prevTopLine);
+			}
 			prevTopLine = render.topLine;
-			render.SetCursor(buffer.line);
+			if (!selectionChanged) render.SetCursor(buffer.line);
 		}
 		else if (keyInfo.Key == ConsoleKey.DownArrow) {
+			var previousSelection = GetSelectionAreaOrNull();
+			bool selectionChanged = false;
 			if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Shift)) {
 				if (!buffer.isSelecting) buffer.StartSelecting();
 				buffer.MoveDown();
 				buffer.UpdateSelection();
-				render.PrintScreen();
+				selectionChanged = true;
 			}
 			else {
 				buffer.MoveDown();
 				if (buffer.isSelecting) {
 					buffer.StopSelecting();
-					render.ResetView();
-					render.PrintScreen();
+					selectionChanged = true;
 				}
 			}
 
 			render.ResetView();
-			if (prevTopLine != render.topLine) render.ScrollViewportIfPoss(prevTopLine);
+			if (selectionChanged) {
+				if (prevTopLine != render.topLine) {
+					render.ScrollViewportIfPoss(prevTopLine);
+				}
+				var currentSelection = GetSelectionAreaOrNull();
+				var dirtyRanges = BuildSelectionDirtyRanges(previousSelection, currentSelection, buffer.line);
+				render.RedrawVisibleRanges(dirtyRanges);
+			}
+			else if (prevTopLine != render.topLine) {
+				render.ScrollViewportIfPoss(prevTopLine);
+			}
 			prevTopLine = render.topLine;
-			render.SetCursor(buffer.line);
+			if (!selectionChanged) render.SetCursor(buffer.line);
 		}
 		else if (!char.IsControl(keyInfo.KeyChar)) {
 			if (buffer.pairs.ContainsKey(keyInfo.KeyChar)) {
@@ -428,6 +481,57 @@ class EditorState : State {
 			render.PrintScreen();
 
 		}
+	}
+
+	private (int startLine, int endLine, int startColumn, int endColumn)? GetSelectionAreaOrNull() {
+		return buffer.isSelecting ? render.GetSelectedArea() : null;
+	}
+
+	private static void AddRange(List<(int startLine, int endLine)> ranges, int startLine, int endLine) {
+		if (startLine > endLine) return;
+		ranges.Add((startLine, endLine));
+	}
+
+	private static List<(int startLine, int endLine)> BuildSelectionDirtyRanges(
+		(int startLine, int endLine, int startColumn, int endColumn)? previousSelection,
+		(int startLine, int endLine, int startColumn, int endColumn)? currentSelection,
+		int cursorLine
+	) {
+		List<(int startLine, int endLine)> ranges = new();
+		AddRange(ranges, cursorLine, cursorLine);
+
+		if (previousSelection.HasValue && currentSelection.HasValue) {
+			var prev = previousSelection.Value;
+			var curr = currentSelection.Value;
+
+			AddRange(ranges, prev.startLine, prev.startLine);
+			AddRange(ranges, prev.endLine, prev.endLine);
+			AddRange(ranges, curr.startLine, curr.startLine);
+			AddRange(ranges, curr.endLine, curr.endLine);
+
+			if (prev.startLine < curr.startLine) {
+				AddRange(ranges, prev.startLine, Math.Min(prev.endLine, curr.startLine - 1));
+			}
+			if (prev.endLine > curr.endLine) {
+				AddRange(ranges, Math.Max(prev.startLine, curr.endLine + 1), prev.endLine);
+			}
+			if (curr.startLine < prev.startLine) {
+				AddRange(ranges, curr.startLine, Math.Min(curr.endLine, prev.startLine - 1));
+			}
+			if (curr.endLine > prev.endLine) {
+				AddRange(ranges, Math.Max(curr.startLine, prev.endLine + 1), curr.endLine);
+			}
+		}
+		else if (previousSelection.HasValue) {
+			var prev = previousSelection.Value;
+			AddRange(ranges, prev.startLine, prev.endLine);
+		}
+		else if (currentSelection.HasValue) {
+			var curr = currentSelection.Value;
+			AddRange(ranges, curr.startLine, curr.endLine);
+		}
+
+		return ranges;
 	}
 	public void MarkSaved() => redoUndoHandler.MarkSaved();
 	public void OnFileOpen() {
