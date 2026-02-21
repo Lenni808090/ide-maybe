@@ -146,7 +146,7 @@ class EditorState : State {
 			}
 
 			render.ResetView();
-			if (prevTopLine != render.topLine) render.PrintScreen();
+			if (prevTopLine != render.topLine) render.ScrollViewportIfPoss(prevTopLine);
 			prevTopLine = render.topLine;
 			render.SetCursor(buffer.line);
 		}
@@ -170,7 +170,7 @@ class EditorState : State {
 			}
 
 			render.ResetView();
-			if (prevTopLine != render.topLine) render.PrintScreen();
+			if (prevTopLine != render.topLine) render.ScrollViewportIfPoss(prevTopLine);
 			prevTopLine = render.topLine;
 			render.SetCursor(buffer.line);
 		}
@@ -191,7 +191,7 @@ class EditorState : State {
 			}
 
 			render.ResetView();
-			if (prevTopLine != render.topLine) render.PrintScreen();
+			if (prevTopLine != render.topLine) render.ScrollViewportIfPoss(prevTopLine);
 			prevTopLine = render.topLine;
 			render.SetCursor(buffer.line);
 		}
@@ -212,7 +212,7 @@ class EditorState : State {
 			}
 
 			render.ResetView();
-			if (prevTopLine != render.topLine) render.PrintScreen();
+			if (prevTopLine != render.topLine) render.ScrollViewportIfPoss(prevTopLine);
 			prevTopLine = render.topLine;
 			render.SetCursor(buffer.line);
 		}
@@ -473,6 +473,7 @@ class EditorState : State {
 		Console.CursorVisible = true;
 		render.ResetView();
 		render.PrintScreen();
+		prevTopLine = render.topLine;
 		statusBar.UpdateStatusBar();
 		render.DrawStatusBar(searchInputMode);
 	}

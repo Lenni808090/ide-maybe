@@ -237,6 +237,42 @@ class Render {
 		}
 	}
 
+	public void ScrollViewportIfPoss(int prevTopLine) {
+		// Selection/search overlays can change styling across many lines, so incremental
+		// one-line repaint is not sufficient; keep correctness with a full redraw.
+		if (buffer.isSelecting || searcher.isSearching) {
+			PrintScreen();
+			return;
+		}
+
+		int delta = topLine - prevTopLine;
+		if (Math.Abs(delta) != 1) {
+			PrintScreen();
+		}
+		else {
+			if (delta == -1) {
+				Console.CursorVisible = false;
+				Console.Write($"\x1b[1;{ContentHeight}r");
+				Console.SetCursorPosition(0, 0);
+				Console.Write("\x1b[1T");
+				PrintLine(topLine, true);
+				Console.Write("\x1b[r");
+				SetCursor(buffer.line);
+				Console.CursorVisible = true;
+			}
+			else if (delta == 1) {
+				Console.CursorVisible = false;
+				Console.Write($"\x1b[1;{ContentHeight}r");
+				Console.SetCursorPosition(0, 0);
+				Console.Write("\x1b[1S");
+				PrintLine(bottomLine - 1, true);
+				Console.Write("\x1b[r");
+				SetCursor(buffer.line);
+				Console.CursorVisible = true;
+			}
+		}
+	}
+
 	static public bool StylesEqual((ConsoleColor fc, ConsoleColor bc) firstStyle, (ConsoleColor fc, ConsoleColor bc) secoundStyle) {
 		return firstStyle.fc == secoundStyle.fc && firstStyle.bc == secoundStyle.bc;
 	}
